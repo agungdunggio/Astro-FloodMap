@@ -10,9 +10,7 @@
   },
   "dependencies": {
     "astro": "^5.8.0",
-    "cesium": "^1.129.0"
-  },
-  "devDependencies": {
+    "cesium": "^1.129.0",
     "vite-plugin-cesium": "^1.2.23"
   }
 }
