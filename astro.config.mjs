@@ -1,10 +1,8 @@
 import { defineConfig } from 'astro/config';
-import cesium from 'vite-plugin-cesium'; // Jika Anda menggunakan plugin ini
+import viteCesium from 'vite-plugin-cesium';
 
 export default defineConfig({
   vite: {
-    plugins: [
-      cesium() // Aktifkan plugin cesium
-    ]
-  }
+    plugins: [viteCesium()],
+  },
 });
