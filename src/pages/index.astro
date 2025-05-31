@@ -19,8 +19,8 @@ import LandingLayout from "../layouts/LandingLayout.astro";
                 </a>
             </div>
             <nav class="hidden md:flex space-x-8">
-                <a href="/simulasi-banjir" class="hover:text-blue-300 transition">3D Map</a> 
-                <a href="/" class="hover:text-blue-300 transition">Landing</a>
+                <!-- <a href="/simulasi-banjir" class="hover:text-blue-300 transition">3D Map</a> 
+                <a href="/" class="hover:text-blue-300 transition">Landing</a> -->
             </nav>
             <button class="md:hidden text-2xl">
                 <i class="fas fa-bars"></i>
@@ -92,6 +92,47 @@ Jelajahi bagaimana air mengalir, menggenangi wilayah, dan mempengaruhi infrastru
                         </div>
                         <div title="Astro" class="glass-card w-20 h-20 md:w-24 md:h-24 p-2 flex items-center justify-center hover:shadow-lg transition duration-300">
                            <img src="https://astro.build/assets/press/astro-icon-light.svg" alt="Astro" class="w-10 h-10 md:w-12 md:h-12">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="projects" class="py-20">
+            <div class="container mx-auto px-6">
+                <h2 class="text-3xl md:text-4xl font-bold text-center mb-4 text-white">Fitur</h2>
+                <p class="text-center text-gray-300 max-w-2xl mx-auto mb-16">Fitur yang ada di G-Flood</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                    <!-- Project 1 -->
+                    <div class="project-card glass-card rounded-xl overflow-hidden transition duration-500 flex flex-col">
+                        <div id="project1-3d" class="h-48 w-full bg-gradient-to-br from-blue-900 to-blue-800 flex items-center justify-center">
+                            <span class="text-4xl text-blue-300">🌊</span>
+                        </div>
+                        <div class="p-6 flex-grow">
+                            <h3 class="text-xl font-semibold mb-2 text-white text-center">Simulasi Banjir 3D</h3>
+                            <p class="text-gray-300 mb-4 text-center">Visualisasi simulasi banjir dalam bentuk 3D dengan interaktif untuk Kota Gorontalo. Fitur ini memungkinkan pengguna untuk melihat simulasi ketinggian air dan area terdampak.</p>
+                        </div>
+                        <div class="p-6 pt-0">
+                            <a href="/simulasi-banjir" class="btn-rain w-full text-center py-3 rounded-full font-semibold flex items-center justify-center text-lg">
+                                <i class="fas fa-play mr-2"></i> Coba Sekarang
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Project 2 -->
+                    <div class="project-card glass-card rounded-xl overflow-hidden transition duration-500 flex flex-col">
+                        <div id="project2-3d" class="h-48 w-full bg-gradient-to-br from-green-900 to-green-800 flex items-center justify-center">
+                            <span class="text-4xl text-green-300">🌤️</span>
+                        </div>
+                        <div class="p-6 flex-grow">
+                            <h3 class="text-xl font-semibold mb-2 text-white text-center">Integrasi API BMKG</h3>
+                            <p class="text-gray-300 mb-4 text-center">Informasi cuaca dan iklim real-time dari BMKG untuk Kota Gorontalo. Menampilkan data curah hujan, suhu, dan peringatan dini cuaca ekstrem.</p>
+                        </div>
+                        <div class="p-6 pt-0">
+                            <a href="/cuaca-bmkg" class="btn-rain w-full text-center py-3 rounded-full font-semibold flex items-center justify-center text-lg">
+                                <i class="fas fa-cloud-sun mr-2"></i> Coba Sekarang
+                            </a>
                         </div>
                     </div>
                 </div>

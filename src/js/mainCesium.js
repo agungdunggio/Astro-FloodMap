@@ -16,9 +16,9 @@ export async function initializeCesiumApp() {
 
     if (viewer) {
         // Path ke data GeoJSON (relatif dari folder /public)
-        await loadWaterLevelGeoJson(viewer, "/data/geojson/water/Water_Level.json");
-        await loadAdminBoundaryGeoJson(viewer, "/data/geojson/adminstrasi/lineAdmnKec.json");
-        await loadAdminBoundaryGeoJson(viewer, "/data/geojson/adminstrasi/areaKotaAdministrasiKotaGtlo.json");
+        await loadWaterLevelGeoJson(viewer, "/data/geojson/water/waterLevel.json");
+        await loadAdminBoundaryGeoJson(viewer, "/data/geojson/administrasi/lineAdmnKec.json");
+        await loadAdminBoundaryGeoJson(viewer, "/data/geojson/administrasi/areaKotaAdministrasiKotaGtlo.json");
         
         addLabels(viewer);
         initializeSimulationClockEvents(viewer);
