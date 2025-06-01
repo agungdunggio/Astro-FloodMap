@@ -32,3 +32,21 @@ export async function initializeCesiumApp() {
         console.error("Gagal membuat Cesium Viewer di Astro.");
     }
 }
+
+export async function initializeBaseMap() {
+    const viewer = await createViewer(); // Buat viewer dari viewerSetup.js
+
+    if (viewer) {
+      await loadWaterLevelGeoJson(viewer, "/data/geojson/water/Water_Level.json");
+      await loadAdminBoundaryGeoJson(viewer, "/data/geojson/adminstrasi/lineAdmnKec.json");
+      await loadAdminBoundaryGeoJson(viewer, "/data/geojson/adminstrasi/areaKotaAdministrasiKotaGtlo.json");
+      
+      // Tambahkan label
+      addLabels(viewer);
+      
+      console.log("Peta Dasar CesiumJS berhasil diinisialisasi.");
+      
+    } else {
+      console.error("Gagal membuat Cesium Viewer untuk Peta Dasar.");
+    }
+  }

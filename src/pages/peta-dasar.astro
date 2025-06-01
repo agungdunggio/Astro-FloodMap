@@ -1,0 +1,44 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+// import ForecastModal from '../components/ForcastModal.astro';
+---
+<BaseLayout title="Peta Dasar Gorontalo & Prakiraan Cuaca Agregat - Simulasi Banjir">
+  <main>  
+    {/* Kontainer untuk Cesium Viewer */}
+    <div id="cesiumContainer"></div>
+    
+    {/* Tombol untuk membuka modal */}
+    <button id="openForecastBtn" class="forecast-btn">
+      <span class="btn-icon">🌤️</span>
+      <span class="btn-text">Prakiraan Cuaca</span>
+      <div id="loadingIndicator" class="loading-indicator hidden">
+        <div class="spinner"></div>
+      </div>
+    </button>
+
+    {/* Modal untuk menampilkan data BMKG */}
+    <div id="forecastModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4>Prakiraan Cuaca Agregat (Kota Gorontalo)</h4>
+          <button id="closeModalBtn" class="close-btn">&times;</button>
+        </div>
+        <div id="bmkgAggregatedForecastContent" class="modal-body">
+          Memuat dan mengagregasi prakiraan...
+        </div>
+      </div>
+    </div>
+
+    <!-- <ForecastModal aggregatedData={aggregatedData} /> -->
+    
+    <script>
+      import { initializePetaDasarPageUI } from '../js/petaDasarUiControls.js';
+      import { initializeBaseMap } from "../js/mainCesium.js";
+      
+      initializeBaseMap();
+      initializePetaDasarPageUI();
+    </script>
+    
+    <style>@import '../style/peta-dasar-style.css';</style>
+  </main>
+</BaseLayout>
