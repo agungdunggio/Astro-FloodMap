@@ -1,6 +1,6 @@
 // src/js/uiControls.js
 import * as Cesium from 'cesium'; // Mungkin tidak perlu Cesium di sini jika tidak ada interaksi langsung
-import { defineRainEvent, cancelRainEvent } from './simulationManager.js';
+import { defineRainEvent, cancelRainEvent } from '../simulationManager.js';
 // Jika ingin ada reset level air dari UI, impor fungsi resetnya
 // import { resetWaterLevel } from './dataLoader.js'; // atau dari mana pun Anda menempatkannya
 
@@ -108,7 +108,7 @@ export function initializeUIControls(viewer) {
 // jika berhubungan dengan state simulasi.
 // Untuk saat ini, kita bisa definisikan di sini jika hanya untuk UI reset manual.
 // Impor waterLevelEntities jika akan dimanipulasi di sini.
-import { waterLevelEntities } from './dataLoader.js';
+import { waterLevelEntities } from '../dataLoader.js';
 const startHeightFromConfig = 29; // Sesuaikan dengan kebutuhan reset Anda
 
 export function uiResetWaterLevel() { // Ganti nama agar tidak bentrok jika ada di tempat lain

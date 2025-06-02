@@ -8,7 +8,7 @@ import 'cesium/Build/Cesium/Widgets/widgets.css';
 import { createViewer } from './viewerSetup.js';
 import { loadWaterLevelGeoJson, loadAdminBoundaryGeoJson, addLabels } from './dataLoader.js';
 import { initializeSimulationClockEvents } from './simulationManager.js';
-import { initializeUIControls /*, uiResetWaterLevel */ } from './uiControls.js'; // Impor jika perlu
+import { initializeUIControls /*, uiResetWaterLevel */ } from './uiControl/uiControls.js'; // Impor jika perlu
 
 
 export async function initializeCesiumApp() {
