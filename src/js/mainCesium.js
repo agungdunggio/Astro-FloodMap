@@ -34,18 +34,16 @@ export async function initializeCesiumApp() {
 }
 
 export async function initializeBaseMap() {
-    const viewer = await createViewer(); // Buat viewer dari viewerSetup.js
-
+    const viewer = await createViewer();
+  
     if (viewer) {
-      await loadWaterLevelGeoJson(viewer, "/data/geojson/water/Water_Level.json");
-      await loadAdminBoundaryGeoJson(viewer, "/data/geojson/adminstrasi/lineAdmnKec.json");
-      await loadAdminBoundaryGeoJson(viewer, "/data/geojson/adminstrasi/areaKotaAdministrasiKotaGtlo.json");
+      await loadWaterLevelGeoJson(viewer, "/data/geojson/water/waterLevel.json");
+      await loadAdminBoundaryGeoJson(viewer, "/data/geojson/administrasi/lineAdmnKec.json");
+      await loadAdminBoundaryGeoJson(viewer, "/data/geojson/administrasi/areaKotaAdministrasiKotaGtlo.json");
       
-      // Tambahkan label
       addLabels(viewer);
-      
+  
       console.log("Peta Dasar CesiumJS berhasil diinisialisasi.");
-      
     } else {
       console.error("Gagal membuat Cesium Viewer untuk Peta Dasar.");
     }

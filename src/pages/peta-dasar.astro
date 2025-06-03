@@ -1,7 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import ForecastModal from '../components/forecast/ForcastModal.astro';
-// import { getAggregatedForecastForKotaGorontalo } from '../js/bmkgAggregatedForecast.js';
+import ForecastModal from '../components/forecast/ForecastModal.vue';
+// import { getAggregatedForecastForKotaGorontalo } from '../js/fetch/bmkgAggregatedForecast.js';
 
 // // Ambil data di server-side dengan error handling
 // let aggregatedData = null;
@@ -38,7 +38,7 @@ import ForecastModal from '../components/forecast/ForcastModal.astro';
       </div>
     </div> -->
 
-    <ForecastModal />
+    <ForecastModal client:load />
     
     <script>
       import { initializePetaDasarPageUI } from '../js/uiControl/petaDasarUiControls.js';
