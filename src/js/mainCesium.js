@@ -2,6 +2,7 @@
 import * as Cesium from 'cesium';
 // Jika TIDAK menggunakan vite-plugin-cesium, atau plugin tidak handle CSS:
 import 'cesium/Build/Cesium/Widgets/widgets.css';
+import {formatJulianDateToWITA, formatJulianTimeToWITA, formatJulianDateToShortWITAForTimeline} from './Cesium/formatToWita.js';
 // Jika TIDAK menggunakan vite-plugin-cesium dan aset di public/cesium-assets:
 // globalThis.CESIUM_BASE_URL = '/cesium-assets/';
 
@@ -23,6 +24,16 @@ export async function initializeCesiumApp() {
         addLabels(viewer);
         initializeSimulationClockEvents(viewer);
         initializeUIControls(viewer);
+
+        if (viewer.animation) {
+          viewer.animation.viewModel.dateFormatter = formatJulianDateToWITA;
+          viewer.animation.viewModel.timeFormatter = formatJulianTimeToWITA;
+        }
+        
+        if (viewer.timeline) {
+          viewer.timeline.makeLabel = formatJulianDateToShortWITAForTimeline;
+          viewer.timeline.resize();
+        }
         
         // Panggil reset di awal jika Anda ingin air mulai dari startHeight (29m)
         // uiResetWaterLevel(); // Atau pastikan loadWaterLevelGeoJson mengatur ketinggian awal yang benar
@@ -40,6 +51,20 @@ export async function initializeBaseMap() {
       await loadWaterLevelGeoJson(viewer, "/data/geojson/water/waterLevel.json");
       await loadAdminBoundaryGeoJson(viewer, "/data/geojson/administrasi/lineAdmnKec.json");
       await loadAdminBoundaryGeoJson(viewer, "/data/geojson/administrasi/areaKotaAdministrasiKotaGtlo.json");
+
+      if (viewer.animation) {
+        viewer.animation.viewModel.dateFormatter = function(date, viewModel) {
+          return formatJulianDateToWITA(date);
+        };
+      }
+    
+      if (viewer.timeline) {
+        viewer.timeline.makeLabel = function(date) {
+          return formatJulianDateToShortWITAForTimeline(date);
+        };
+        viewer.timeline.resize();
+      }
+    
       
       addLabels(viewer);
   

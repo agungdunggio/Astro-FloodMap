@@ -5,8 +5,8 @@
         <h4>Prakiraan Cuaca Agregat (Kota Gorontalo)</h4>
         <button id="closeModalBtn" class="close-btn" aria-label="Tutup Modal" @click="closeModal">×</button>
       </div>
-      <div id="bmkgAggregatedForecastContent" class="modal-body kecamatan-scroll">
-        <div v-if="Object.keys(forecasts).length > 0">
+      <div id="bmkgAggregatedForecastContent" class="modal-body kecamatan-scroll overflow-x-scroll">
+        <div v-if="Object.keys(forecasts).length > 0" class="forecast-row-horizontal">
           <div
             class="kecamatan-forecast-block"
             v-for="[kecamatanKey, dataKecamatan] in Object.entries(forecasts)"
@@ -176,6 +176,11 @@ export default defineComponent({
   letter-spacing: -0.02em;
 }
 
+.forecast-row-horizontal {
+    display: flex;
+    flex-direction: column;
+}
+
 .close-btn {
   background: none;
   border: none;
@@ -223,11 +228,11 @@ export default defineComponent({
 }
 
 .forecast-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 16px;
-  padding-bottom: 12px;
-  justify-items: center;
+    display: flex;
+    padding-bottom: 12px;
+    justify-items: center;
+    overflow-x: scroll;
+    gap: 20px;
 }
 
 .forecast-card {
