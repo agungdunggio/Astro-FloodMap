@@ -64,6 +64,18 @@ const labelData = [
   { lon: 123.038144, lat: 0.564067, text: "Dungingi" },
 ];
 
+const kecamatanList = [
+  { nama: "Kota Selatan", position: Cesium.Cartesian3.fromDegrees(123.057450, 0.545645) },
+  { nama: "Kota Tengah", position: Cesium.Cartesian3.fromDegrees(123.055317, 0.563404) },
+  { nama: "Kota Utara", position: Cesium.Cartesian3.fromDegrees(123.079461, 0.567214) },
+  { nama: "Kota Timur", position: Cesium.Cartesian3.fromDegrees(123.069647, 0.540877) },
+  { nama: "Hulonthalangi", position: Cesium.Cartesian3.fromDegrees(123.048780, 0.516828) },
+  { nama: "Dungingi", position: Cesium.Cartesian3.fromDegrees(123.038144, 0.564067) },
+  { nama: "Kota Barat", position: Cesium.Cartesian3.fromDegrees(123.025807, 0.539135) },
+  { nama: "Sipatana", position: Cesium.Cartesian3.fromDegrees(123.062215, 0.579999) },
+  { nama: "Dumbo Raya", position: Cesium.Cartesian3.fromDegrees(123.075564, 0.510090) },
+];
+
 export function addLabels(viewer) {
   labelData.forEach((label) => {
     viewer.entities.add({

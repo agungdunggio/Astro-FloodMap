@@ -50,6 +50,14 @@ body {
         transform: translateY(110vh); 
     }
 }
+
+@keyframes floatY {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-18px); }
+  }
+  .floating-anim {
+    animation: floatY 2.5s ease-in-out infinite;
+  }
         
 .ripple {
     position: absolute; 
@@ -113,7 +121,7 @@ body {
     box-shadow: 0 4px 15px rgba(100, 150, 255, 0.3);
 }
         
-.umbrella i { 
+.umbrella img { 
     animation: float 3s ease-in-out infinite alternate; 
 }
 
