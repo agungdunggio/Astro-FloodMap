@@ -12,7 +12,7 @@
             v-for="[kecamatanKey, dataKecamatan] in Object.entries(forecasts)"
             :key="kecamatanKey"
           >
-            <h5>{{ dataKecamatan.namaResmi }}</h5>
+            <h5>{{ dataKecamatan.namaResmi.replace('Kecamatan ', '') }}</h5>
             <div v-if="dataKecamatan.forecasts && dataKecamatan.forecasts.length > 0" class="forecast-row">
               <div
                 class="forecast-card"
@@ -139,33 +139,34 @@ export default defineComponent({
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.6);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(20px);
 }
 
 .modal-content {
-  background: #ffffff;
-  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 24px;
   width: 95%;
   max-width: 900px;
   max-height: 90vh;
   overflow-y: auto;
   position: relative;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-  padding-bottom: 16px;
+  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  padding-bottom: 24px;
 }
 
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 24px;
-  border-bottom: 1px solid #e5e7eb;
-  background: #f0f4ff;
-  border-radius: 16px 16px 0 0;
+  padding: 24px 32px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 24px 24px 0 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .modal-header h4 {
@@ -174,6 +175,7 @@ export default defineComponent({
   color: #000000;
   font-weight: 700;
   letter-spacing: -0.02em;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto, sans-serif;
 }
 
 .forecast-row-horizontal {
@@ -188,138 +190,138 @@ export default defineComponent({
   cursor: pointer;
   color: #1e3a8a;
   font-weight: 600;
-  transition: color 0.2s, transform 0.2s;
+  transition: color 0.2s;
+  padding: 8px;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .close-btn:hover {
   color: #dc2626;
-  transform: scale(1.1);
+  background: rgba(220, 38, 38, 0.1);
 }
 
 .modal-body.kecamatan-scroll {
-  padding: 24px;
+  padding: 32px;
   max-height: 70vh;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 40px;
   scrollbar-width: thin;
-  scrollbar-color: #3b82f6 #f1f5f9;
+  scrollbar-color: rgba(59, 130, 246, 0.5) rgba(241, 245, 249, 0.5);
 }
 
 .kecamatan-forecast-block {
-  background: #f8fafc;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  padding: 20px;
-  transition: transform 0.2s;
-}
-
-.kecamatan-forecast-block:hover {
-  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 20px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+  padding: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(8px);
+  margin: 24px 0;
 }
 
 .kecamatan-forecast-block h5 {
-  margin: 0 0 16px 0;
+  margin: 0 0 20px 0;
   font-size: 1.25rem;
   color: #000000;
   font-weight: 600;
   letter-spacing: -0.01em;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto, sans-serif;
 }
 
 .forecast-row {
-    display: flex;
-    padding-bottom: 12px;
-    justify-items: center;
-    overflow-x: scroll;
-    gap: 20px;
+  display: flex;
+  padding-bottom: 16px;
+  justify-items: center;
+  overflow-x: auto;
+  gap: 24px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(59, 130, 246, 0.5) transparent;
 }
 
 .forecast-card {
-  min-width: 120px;
-  max-width: 140px;
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(200, 220, 255, 0.6));
-  backdrop-filter: blur(8px);
-  border-radius: 16px;
-  padding: 14px 12px;
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+  min-width: 140px;
+  max-width: 160px;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  border-radius: 20px;
+  padding: 20px 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   display: flex;
   flex-direction: column;
   align-items: center;
-  font-size: 1rem;
-  color: #1e3a8a;
-  transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.4);
   position: relative;
   overflow: hidden;
 }
 
-.forecast-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.3), transparent 70%);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.forecast-card:hover::before {
-  opacity: 1;
-}
-
 .forecast-card:hover {
-  transform: translateY(-4px) scale(1.02);
-  box-shadow: 0 10px 25px rgba(0, 123, 255, 0.3);
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(180, 200, 255, 0.7));
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 8px 32px rgba(0, 123, 255, 0.15);
 }
 
 .forecast-label {
-  font-weight: 700;
-  margin-bottom: 8px;
+  font-weight: 600;
+  margin-bottom: 12px;
   text-align: center;
   white-space: normal;
-  font-size: 0.95rem;
-  color: #2c5282;
+  font-size: 1rem;
+  color: #1e3a8a;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto, sans-serif;
 }
 
 .forecast-icon {
-  width: 48px;
-  height: 48px;
-  margin: 8px 0;
-  border-radius: 12px;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
-  transition: transform 0.3s ease;
-}
-
-.forecast-card:hover .forecast-icon {
-  transform: scale(1.1);
+  width: 56px;
+  height: 56px;
+  margin: 12px 0;
+  border-radius: 16px;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.1));
 }
 
 .forecast-bottom-row {
   display: flex;
   justify-content: center;
-  gap: 6px;
-  font-weight: 600;
-  margin-top: 6px;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  margin-top: 12px;
+  background: rgba(255, 255, 255, 0.5);
+  padding: 8px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  white-space: nowrap;
+}
+
+.forecast-rain,
+.forecast-slash,
+.forecast-temp {
+  display: inline;
+  vertical-align: middle;
+  white-space: nowrap;
 }
 
 .forecast-rain {
   color: #3b82f6;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  font-weight: 500;
 }
 
 .forecast-slash {
   color: #6b7280;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  opacity: 0.6;
 }
 
 .forecast-temp {
   color: #f43f5e;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  font-weight: 500;
 }
 
 .no-data {
@@ -327,6 +329,7 @@ export default defineComponent({
   color: #6b7280;
   text-align: center;
   margin: 16px 0;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto, sans-serif;
 }
 
 .loading-message {
@@ -334,39 +337,47 @@ export default defineComponent({
   color: #6b7280;
   text-align: center;
   padding: 24px;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto, sans-serif;
 }
 
 @media (max-width: 600px) {
   .modal-content {
     width: 98%;
     max-height: 95vh;
+    border-radius: 20px;
+  }
+
+  .modal-header {
+    padding: 20px 24px;
+  }
+
+  .modal-body.kecamatan-scroll {
+    padding: 24px;
   }
 
   .forecast-card {
-    min-width: 90px;
-    max-width: 100px;
-    padding: 10px 8px;
+    min-width: 120px;
+    max-width: 140px;
+    padding: 16px 12px;
   }
 
   .forecast-label {
-    font-size: 0.8rem;
+    font-size: 0.9rem;
   }
 
   .forecast-icon {
-    width: 40px;
-    height: 40px;
+    width: 48px;
+    height: 48px;
   }
 
   .forecast-bottom-row {
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
+    padding: 6px 12px;
   }
 
   .forecast-rain,
   .forecast-slash,
   .forecast-temp {
-    font-size: 0.8rem;
+    font-size: 0.85rem;
   }
 }
 </style>
