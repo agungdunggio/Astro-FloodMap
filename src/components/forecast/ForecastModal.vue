@@ -171,7 +171,7 @@ export default defineComponent({
 .modal-header h4 {
   margin: 0;
   font-size: 1.5rem;
-  color: #1e3a8a;
+  color: #000000;
   font-weight: 700;
   letter-spacing: -0.02em;
 }
@@ -222,7 +222,7 @@ export default defineComponent({
 .kecamatan-forecast-block h5 {
   margin: 0 0 16px 0;
   font-size: 1.25rem;
-  color: #1e40af;
+  color: #000000;
   font-weight: 600;
   letter-spacing: -0.01em;
 }

@@ -53,15 +53,12 @@ export async function initializeBaseMap() {
       await loadAdminBoundaryGeoJson(viewer, "/data/geojson/administrasi/areaKotaAdministrasiKotaGtlo.json");
 
       if (viewer.animation) {
-        viewer.animation.viewModel.dateFormatter = function(date, viewModel) {
-          return formatJulianDateToWITA(date);
-        };
+        viewer.animation.viewModel.dateFormatter = formatJulianDateToWITA;
+        viewer.animation.viewModel.timeFormatter = formatJulianTimeToWITA;
       }
-    
+      
       if (viewer.timeline) {
-        viewer.timeline.makeLabel = function(date) {
-          return formatJulianDateToShortWITAForTimeline(date);
-        };
+        viewer.timeline.makeLabel = formatJulianDateToShortWITAForTimeline;
         viewer.timeline.resize();
       }
     
