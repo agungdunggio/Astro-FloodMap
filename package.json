@@ -12,7 +12,7 @@
   "dependencies": {
     "@astrojs/vue": "^5.1.0",
     "@tailwindcss/cli": "^4.1.8",
-    "astro": "^5.8.0",
+    "astro": "^5.11.1",
     "cesium": "^1.129.0",
     "vite-plugin-cesium": "^1.2.23",
     "vue": "^3.5.16"

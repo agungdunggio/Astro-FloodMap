@@ -1,4 +1,4 @@
-# Astro Starter Kit: Basics
+<!-- # Astro Starter Kit: Basics
 
 ```sh
 npm create astro@latest -- --template basics
@@ -46,4 +46,78 @@ All commands are run from the root of the project, from a terminal:
 ## 👀 Want to learn more?
 
 Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
-# Astro-FloodMap
+# Astro-FloodMap -->
+
+# 🗺️ Astro-FloodMap
+
+Aplikasi visualisasi dan simulasi banjir interaktif untuk wilayah Gorontalo. Proyek ini dibangun dengan Astro, CesiumJS untuk pemetaan 3D, dan mengambil data cuaca dari BMKG.
+
+## ✨ Fitur Utama
+
+-   **Visualisasi Peta 3D**: Menampilkan data geografis Gorontalo dalam tampilan 3D yang interaktif menggunakan CesiumJS.
+-   **Simulasi Banjir**: Fitur untuk menyimulasikan kenaikan permukaan air dan melihat area yang berpotensi terdampak.
+-   **Prakiraan Cuaca**: Menampilkan data prakiraan cuaca yang diambil langsung dari data *open source* BMKG.
+-   **Peta Dasar Detail**: Memuat lapisan-lapisan data geografis (GeoJSON) seperti batas administrasi kecamatan dan kota.
+-   **Antarmuka Modern**: Dibangun dengan Astro dan komponen Vue.js untuk pengalaman pengguna yang responsif.
+
+## 🛠️ Teknologi yang Digunakan
+
+-   **Framework**: [Astro](https://astro.build/)
+-   **Pemetaan 3D**: [CesiumJS](https://cesium.com/platform/cesiumjs/)
+-   **Komponen UI**: [Vue.js](https://vuejs.org/)
+-   **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+-   **Deployment**: Siap untuk di-deploy di platform statis seperti Vercel, Netlify, atau GitHub Pages.
+
+## 🚀 Memulai Proyek
+
+Berikut adalah cara untuk menjalankan proyek ini di lingkungan lokal Anda.
+
+1.  **Clone Repositori (Jika diperlukan)**
+    ```bash
+    git clone [URL_REPOSITORI_ANDA]
+    cd Astro-FloodMap
+    ```
+
+2.  **Instal Dependensi**
+    Pastikan Anda memiliki Node.js terinstal. Jalankan perintah berikut di terminal:
+    ```bash
+    npm install
+    ```
+
+3.  **Jalankan Server Pengembangan**
+    Perintah ini akan memulai server lokal di `http://localhost:4321` dengan *hot-reloading*.
+    ```bash
+    npm run dev
+    ```
+
+4.  **Build untuk Produksi**
+    Untuk membuat versi produksi dari aplikasi Anda, jalankan:
+    ```bash
+    npm run build
+    ```
+    File hasil build akan tersedia di direktori `./dist/`.
+
+5.  **Pratinjau Hasil Build**
+    Untuk melihat hasil build produksi secara lokal sebelum di-deploy:
+    ```bash
+    npm run preview
+    ```
+
+## 📂 Struktur Proyek
+
+Struktur file utama dalam proyek ini adalah sebagai berikut:
+
+```text
+/
+├── public/
+│   ├── data/                 # Data GeoJSON dan gambar
+│   └── favicon.svg
+├── src/
+│   ├── assets/               # Aset statis seperti gambar & SVG
+│   ├── components/           # Komponen Astro & Vue
+│   ├── js/                   # Logika utama (CesiumJS, simulasi, fetch data)
+│   ├── layouts/              # Tata letak dasar halaman
+│   ├── pages/                # Halaman aplikasi (.astro)
+│   └── style/                # File CSS global & styling
+├── astro.config.mjs          # File konfigurasi Astro
+└── package.json              # Dependensi dan skrip proyek
