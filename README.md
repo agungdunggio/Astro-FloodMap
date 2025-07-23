@@ -74,7 +74,7 @@ Berikut adalah cara untuk menjalankan proyek ini di lingkungan lokal Anda.
 
 1.  **Clone Repositori (Jika diperlukan)**
     ```bash
-    git clone [URL_REPOSITORI_ANDA]
+    git clone https://github.com/agungdunggio/Astro-FloodMap.git
     cd Astro-FloodMap
     ```
 
