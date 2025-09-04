@@ -121,3 +121,15 @@ Struktur file utama dalam proyek ini adalah sebagai berikut:
 │   └── style/                # File CSS global & styling
 ├── astro.config.mjs          # File konfigurasi Astro
 └── package.json              # Dependensi dan skrip proyek
+## Environment Variables
+
+Aplikasi ini menggunakan environment variables untuk konfigurasi. Salin file `.env.example` ke `.env` dan sesuaikan nilai-nilainya:
+
+```bash
+cp .env.example .env
+```
+
+### Variabel yang Tersedia:
+
+- `PUBLIC_CESIUM_ACCESS_TOKEN`: Token akses Cesium (wajib)
+

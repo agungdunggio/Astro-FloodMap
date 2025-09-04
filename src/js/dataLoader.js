@@ -2,7 +2,7 @@
 import * as Cesium from 'cesium';
 
 export let waterLevelEntities = [];
-const startHeight = 29; // Ketinggian awal statis air dari kode Anda
+export const startHeight = 29; // Ketinggian awal statis air - di-export untuk digunakan di modul lain
 
 export async function loadWaterLevelGeoJson(viewer, geoJsonUrl) {
   try {
@@ -94,4 +94,18 @@ export function addLabels(viewer) {
       },
     });
   });
+}
+
+/**
+ * Reset ketinggian air ke nilai awal statis
+ * Menghapus CallbackProperty dan menggunakan nilai tetap
+ */
+export function resetWaterLevelToStatic() {
+  waterLevelEntities.forEach((entity) => {
+    if (Cesium.defined(entity.polygon)) {
+      entity.polygon.extrudedHeight = startHeight;
+      entity.polygon.material = Cesium.Color.fromCssColorString("#00BFFF").withAlpha(0.7);
+    }
+  });
+  console.log(`Water level direset ke ketinggian statis: ${startHeight}m`);
 }

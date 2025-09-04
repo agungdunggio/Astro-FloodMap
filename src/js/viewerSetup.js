@@ -26,7 +26,7 @@ export async function createViewer() {
   const scene = viewer.scene;
   scene.globe.depthTestAgainstTerrain = true;
   scene.camera.setView(targetLocation);
-  scene.verticalExaggeration = 1.5; // Sesuai kode asli Anda
+  scene.verticalExaggeration = 1; // Sesuai kode asli Anda
 
   return viewer;
 }

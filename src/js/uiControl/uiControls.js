@@ -1,8 +1,6 @@
 // src/js/uiControls.js
 import * as Cesium from 'cesium'; // Mungkin tidak perlu Cesium di sini jika tidak ada interaksi langsung
-import { defineRainEvent, cancelRainEvent } from '../simulationManager.js';
-// Jika ingin ada reset level air dari UI, impor fungsi resetnya
-// import { resetWaterLevel } from './dataLoader.js'; // atau dari mana pun Anda menempatkannya
+import { startFloodSimulation, stopFloodSimulation } from '../simulationManager.js';
 
 function createModal() {
     if (document.getElementById('simpleModal')) return; 
@@ -72,51 +70,39 @@ export function initializeUIControls(viewer) {
 
   if (applyRainButton) {
     applyRainButton.addEventListener("click", () => {
+      const rainMm = parseFloat(document.getElementById("rainInput").value);
       const durationInputHours = parseFloat(document.getElementById("rainDuration").value);
-      // const intensity = parseFloat(document.getElementById("rainIntensity").value); // Tidak digunakan
+
+      if (isNaN(rainMm) || rainMm <= 0) {
+        displayModalMessage("Masukkan curah hujan yang valid (lebih dari 0 mm).");
+        return;
+      }
 
       if (isNaN(durationInputHours) || durationInputHours <= 0) {
         displayModalMessage("Masukkan durasi hujan yang valid (lebih dari 0 jam).");
         return;
       }
       
-      defineRainEvent(viewer, durationInputHours);
-      // Jika ingin mengaktifkan animasi air juga:
-      // import { startWaterRiseAnimation } from './simulationManager.js';
-      // startWaterRiseAnimation(viewer);
+      // Mulai simulasi banjir (sudah termasuk sinkronisasi waktu hujan)
+      startFloodSimulation(viewer, rainMm, durationInputHours);
       
       rainControls.style.display = "none";
       raiseButton.disabled = false;
+      
+      displayModalMessage(`Simulasi dimulai: ${rainMm}mm hujan selama ${durationInputHours} jam`);
     });
   }
 
   if (cancelRainButton) {
     cancelRainButton.addEventListener("click", () => {
-      cancelRainEvent(viewer);
-      // Jika ingin membatalkan animasi air juga:
-      // import { cancelWaterRiseAnimation } from './simulationManager.js';
-      // cancelWaterRiseAnimation();
+      stopFloodSimulation(viewer); // Sudah termasuk menghentikan efek hujan dan reset clock
 
       rainControls.style.display = "none";
       raiseButton.disabled = false;
+      
+      displayModalMessage("Simulasi dihentikan dan air direset ke ketinggian awal.");
     });
   }
 }
 
-// Fungsi resetWaterLevel yang sebelumnya ada di kode global Anda.
-// Ini mungkin lebih cocok di dataLoader.js atau dikelola oleh simulationManager.js
-// jika berhubungan dengan state simulasi.
-// Untuk saat ini, kita bisa definisikan di sini jika hanya untuk UI reset manual.
-// Impor waterLevelEntities jika akan dimanipulasi di sini.
-import { waterLevelEntities } from '../dataLoader.js';
-const startHeightFromConfig = 29; // Sesuaikan dengan kebutuhan reset Anda
-
-export function uiResetWaterLevel() { // Ganti nama agar tidak bentrok jika ada di tempat lain
-    waterLevelEntities.forEach((entity) => {
-        if (Cesium.defined(entity.polygon)) {
-            entity.polygon.extrudedHeight = startHeightFromConfig; 
-            entity.polygon.material = Cesium.Color.fromCssColorString("#00BFFF").withAlpha(0.7);
-        }
-    });
-    console.log("Water level direset dari UI (jika fungsi ini dipanggil).");
-}
+// Fungsi reset water level sudah dipindahkan ke dataLoader.js sebagai resetWaterLevelToStatic()

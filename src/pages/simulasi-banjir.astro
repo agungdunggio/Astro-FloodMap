@@ -9,10 +9,12 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     <button id="raiseGeoJsonButton" class="control-button">Up Water Level</button>
       
     <div id="rainControls" style="display: none;">
+        <label for="rainInput">Curah Hujan (mm):</label>
+        <input type="number" id="rainInput" min="1" max="500" value="100" step="1"><br><br>
         <label for="rainDuration">Durasi (jam):</label>
-        <input type="number" id="rainDuration" min="1" max="24" value="2"><br><br>
-        <button id="applyRain">Terapkan</button>
-        <button id="cancelRain">Batal</button>
+        <input type="number" id="rainDuration" min="1" max="24" value="2" step="0.5"><br><br>
+        <button id="applyRain">Mulai Simulasi</button>
+        <button id="cancelRain">Hentikan Simulasi</button>
     </div>
     
     <script>
