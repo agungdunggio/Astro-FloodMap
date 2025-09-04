@@ -1,7 +1,6 @@
 // src/js/uiControls.js
 import * as Cesium from 'cesium'; // Mungkin tidak perlu Cesium di sini jika tidak ada interaksi langsung
-import { defineRainEvent, cancelRainEvent, startFloodSimulation, stopFloodSimulation } from '../simulationManager.js';
-import { resetWaterLevelToStatic } from '../dataLoader.js';
+import { startFloodSimulation, stopFloodSimulation } from '../simulationManager.js';
 
 function createModal() {
     if (document.getElementById('simpleModal')) return; 
@@ -84,8 +83,7 @@ export function initializeUIControls(viewer) {
         return;
       }
       
-      // Mulai efek hujan dan simulasi banjir
-      defineRainEvent(viewer, durationInputHours);
+      // Mulai simulasi banjir (sudah termasuk sinkronisasi waktu hujan)
       startFloodSimulation(viewer, rainMm, durationInputHours);
       
       rainControls.style.display = "none";
@@ -97,8 +95,7 @@ export function initializeUIControls(viewer) {
 
   if (cancelRainButton) {
     cancelRainButton.addEventListener("click", () => {
-      cancelRainEvent(viewer);
-      stopFloodSimulation(viewer);
+      stopFloodSimulation(viewer); // Sudah termasuk menghentikan efek hujan dan reset clock
 
       rainControls.style.display = "none";
       raiseButton.disabled = false;

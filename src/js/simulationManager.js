@@ -43,10 +43,12 @@ export function initializeSimulationClockEvents(viewer) {
   });
 }
 
-export function defineRainEvent(viewer, durationHours) {
+export function defineRainEvent(viewer, durationHours, customStartTime = null) {
   removeRainEffect(viewer.scene); // Bersihkan efek lama dulu
 
-  rainEventStartJulianDate = Cesium.JulianDate.clone(viewer.clock.currentTime);
+  // Gunakan waktu kustom jika disediakan, atau waktu clock saat ini
+  const startTime = customStartTime || viewer.clock.currentTime;
+  rainEventStartJulianDate = Cesium.JulianDate.clone(startTime);
   rainEventEndJulianDate = Cesium.JulianDate.addHours(rainEventStartJulianDate, durationHours, new Cesium.JulianDate());
   
   viewer.clock.shouldAnimate = true;
@@ -96,6 +98,14 @@ export function startFloodSimulation(viewer, rainMm, durationHours) {
   waterAnimationStartTime = now.clone();
   isAnimatingWater = true;
 
+  // PENTING: Sinkronkan waktu hujan dengan waktu simulasi yang baru
+  rainEventStartJulianDate = Cesium.JulianDate.clone(now);
+  rainEventEndJulianDate = Cesium.JulianDate.addHours(rainEventStartJulianDate, durationHours, new Cesium.JulianDate());
+  
+  // Mulai efek hujan segera karena kita sudah dalam interval waktu hujan
+  removeRainEffect(viewer.scene); // Bersihkan efek lama dulu
+  addRainEffect(viewer.scene);    // Mulai efek hujan baru
+
   // Pasang CallbackProperty untuk extrudedHeight pada semua entitas air
   waterLevelEntities.forEach(entity => {
     if (entity.polygon) {
@@ -128,6 +138,21 @@ export function startFloodSimulation(viewer, rainMm, durationHours) {
 export function stopFloodSimulation(viewer) {
   isAnimatingWater = false;
   waterAnimationStartTime = null;
+  
+  // Reset waktu hujan
+  rainEventStartJulianDate = null;
+  rainEventEndJulianDate = null;
+  
+  // Hentikan efek hujan
+  removeRainEffect(viewer.scene);
+  
+  // Reset clock ke waktu real-time
+  const now = Cesium.JulianDate.now();
+  viewer.clock.startTime = now.clone();
+  viewer.clock.currentTime = now.clone();
+  viewer.clock.stopTime = Cesium.JulianDate.addDays(now, 1, new Cesium.JulianDate());
+  viewer.clock.multiplier = 1.0; // kembali ke kecepatan normal
+  viewer.clock.clockRange = Cesium.ClockRange.UNBOUNDED;
   
   // Reset ketinggian air ke nilai awal menggunakan fungsi dari dataLoader
   resetWaterLevelToStatic();
