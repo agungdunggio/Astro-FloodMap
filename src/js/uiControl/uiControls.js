@@ -67,8 +67,24 @@ export function initializeUIControls(viewer) {
   const applyRainButton = document.getElementById("applyRain");
   const cancelRainButton = document.getElementById("cancelRain");
 
-  // State untuk tracking panel visibility
+  // State untuk tracking panel visibility dan simulasi
   let isPanelOpen = false;
+  let isSimulationRunning = false;
+  
+  // Fungsi untuk update state tombol
+  function updateButtonStates() {
+    if (cancelRainButton) {
+      cancelRainButton.disabled = !isSimulationRunning;
+      if (isSimulationRunning) {
+        cancelRainButton.classList.remove('disabled');
+      } else {
+        cancelRainButton.classList.add('disabled');
+      }
+    }
+  }
+  
+  // Set initial state
+  updateButtonStates();
 
   if (raiseButton) {
     raiseButton.addEventListener("click", () => {
@@ -124,6 +140,10 @@ export function initializeUIControls(viewer) {
       // Mulai simulasi banjir (sudah termasuk sinkronisasi waktu hujan)
       startFloodSimulation(viewer, rainMm, durationInputHours);
       
+      // Update state simulasi
+      isSimulationRunning = true;
+      updateButtonStates();
+      
       // Tutup panel dengan animasi
       rainControls.style.opacity = "0";
       rainControls.style.transform = "translateY(-10px)";
@@ -144,7 +164,14 @@ export function initializeUIControls(viewer) {
 
   if (cancelRainButton) {
     cancelRainButton.addEventListener("click", () => {
+      // Jangan jalankan jika simulasi tidak berjalan
+      if (!isSimulationRunning) return;
+      
       stopFloodSimulation(viewer); // Sudah termasuk menghentikan efek hujan dan reset clock
+
+      // Update state simulasi
+      isSimulationRunning = false;
+      updateButtonStates();
 
       // Tutup panel dengan animasi
       rainControls.style.opacity = "0";
