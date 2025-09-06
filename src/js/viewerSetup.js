@@ -3,7 +3,7 @@ import * as Cesium from 'cesium';
 import { cesiumAccessToken, targetLocation } from "./cesiumConfig.js";
 
 export async function createViewer() {
-  if (cesiumAccessToken === 'TeyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjYTkyNjllNS04ZTMwLTRhY2MtYjM1Ny1hMzhmMGI2ZGRlOWQiLCJpZCI6MjY5ODk1LCJpYXQiOjE3MzcyMjEzMzB9.92HCfXOYGMjHUCGj2FzJeScdbPilkqQ7BL5eVOicRho' || !cesiumAccessToken) {
+  if (cesiumAccessToken === !cesiumAccessToken) {
     console.warn("PERHATIAN: Cesium Ion Access Token belum diatur di cesiumConfig.js. Beberapa fitur mungkin tidak berfungsi.");
     // Anda bisa menampilkan pesan ini di UI juga jika mau
   }
@@ -14,6 +14,11 @@ export async function createViewer() {
     terrain: Cesium.Terrain.fromWorldTerrain({ requestWaterMask: true }),
     timeline: true,
     animation: true,
+    geocoder: false,
+    homeButton: false,
+    // baseLayerPicker: false,
+    sceneModePicker: false,
+    // creditContainer: document.createElement("div"),
   });
 
   try {
