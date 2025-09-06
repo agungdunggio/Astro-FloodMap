@@ -41,7 +41,7 @@ export async function loadAdminBoundaryGeoJson(viewer, geoJsonUrl) {
         entity.polyline.width = 5;
       } else if (Cesium.defined(entity.polygon)) {
         const hierarchy = entity.polygon.hierarchy.getValue(Cesium.JulianDate.now());
-        const positions = hierarchy.positions;   
+        const positions = hierarchy.positions;
         // Buat polyline mengikuti terrain
         viewer.entities.add({
           polyline: {
