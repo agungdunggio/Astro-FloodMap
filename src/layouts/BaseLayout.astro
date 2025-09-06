@@ -13,7 +13,10 @@ const { title } = Astro.props;
         <meta name="generator" content={Astro.generator} />
         <title>{title}</title>
         <link rel="stylesheet" href="/src/style/global.css">
+        <script type="module" is:inline src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+        <script nomodule is:inline src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
     </head>
     <body>
-        <slot /> </body>
+        <slot /> 
+    </body>
 </html>

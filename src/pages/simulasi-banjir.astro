@@ -6,15 +6,24 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   <main>  
     <div id="cesiumContainer"></div>
     
-    <button id="raiseGeoJsonButton" class="control-button">Up Water Level</button>
+    <button id="raiseGeoJsonButton" class="control-button"><ion-icon name="water-outline"></ion-icon> Simulasi Banjir</button>
       
     <div id="rainControls" style="display: none;">
-        <label for="rainInput">Curah Hujan (mm):</label>
-        <input type="number" id="rainInput" min="1" max="500" value="100" step="1"><br><br>
-        <label for="rainDuration">Durasi (jam):</label>
-        <input type="number" id="rainDuration" min="1" max="24" value="2" step="0.5"><br><br>
-        <button id="applyRain">Mulai Simulasi</button>
-        <button id="cancelRain">Hentikan Simulasi</button>
+        <div class="input-row">
+            <div class="input-group">
+                <label for="rainInput"><ion-icon name="cloudy-outline"></ion-icon> Curah Hujan (mm):</label>
+                <input type="number" id="rainInput" min="1" max="500" value="100" step="1">
+            </div>
+            <div class="input-group">
+                <label for="rainDuration"><ion-icon name="time-outline"></ion-icon> Durasi (jam):</label>
+                <input type="number" id="rainDuration" min="1" max="24" value="2" step="0.5">
+            </div>
+        </div>
+        
+        <div class="button-row">
+          <button id="applyRain"><ion-icon name="play"></ion-icon> Mulai Simulasi</button>
+          <button id="cancelRain"><ion-icon name="stop"></ion-icon> Hentikan</button>
+        </div>
     </div>
     
     <script>
