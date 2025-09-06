@@ -40,11 +40,20 @@ export async function loadAdminBoundaryGeoJson(viewer, geoJsonUrl) {
         });
         entity.polyline.width = 5;
       } else if (Cesium.defined(entity.polygon)) {
+        const hierarchy = entity.polygon.hierarchy.getValue(Cesium.JulianDate.now());
+        const positions = hierarchy.positions;   
+        // Buat polyline mengikuti terrain
+        viewer.entities.add({
+          polyline: {
+            positions: positions,
+            clampToGround: true,
+            width: 3,
+            material: Cesium.Color.YELLOW
+          }
+        });
+        // Polygon bisa dibuat transparan / non-fill
         entity.polygon.fill = false;
-        entity.polygon.outline = true;
-        entity.polygon.outlineColor = Cesium.Color.YELLOW;
-        entity.polygon.outlineWidth = 2;
-        entity.polygon.classificationType = Cesium.ClassificationType.TERRAIN;
+        entity.polygon.outline = false; // outline default dimatikan
       }
     });
   } catch (error) {
