@@ -153,7 +153,7 @@ export function initializeUIControls(viewer) {
       isPanelOpen = false;
       
       // Reset button text
-      raiseButton.innerHTML = "🌊 Simulasi Banjir";
+      raiseButton.innerHTML = `<ion-icon name="water-outline"></ion-icon> Simulasi Banjir`;
       
       displayModalMessage("Simulasi dihentikan dan air direset ke ketinggian awal.");
     });
