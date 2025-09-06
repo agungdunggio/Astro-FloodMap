@@ -94,8 +94,10 @@ export function initializeUIControls(viewer) {
         rainControls.offsetHeight;
         
         rainControls.style.transition = "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)";
-        rainControls.style.opacity = "1";
-        rainControls.style.transform = "translateY(0)";
+        requestAnimationFrame(() => {
+          rainControls.style.opacity = "1";
+          rainControls.style.transform = "translateY(0)";
+        });
         isPanelOpen = true;
         
         // Update button text untuk menunjukkan state
