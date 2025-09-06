@@ -35,7 +35,7 @@ function createModal() {
     document.body.appendChild(modal);
 }
 
-function displayModalMessage(message, detail="") {
+function displayModalMessage(message, detail = "") {
     const modal = document.getElementById('simpleModal');
     const modalTitle = document.getElementById('simpleModalTitle');
     const modalText = document.getElementById('simpleModalText');
