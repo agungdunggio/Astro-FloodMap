@@ -36,7 +36,7 @@ export async function createViewer() {
   // Custom home button behavior - navigasi ke halaman utama
   viewer.homeButton.viewModel.command.beforeExecute.addEventListener(function(e) {
     e.cancel = true; // Cancel default home behavior
-    window.location.href = '/'; // Navigate to home page
+    window.location.href = '/#technologies'; // Navigate to home page
   });
 
   return viewer;

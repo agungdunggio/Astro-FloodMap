@@ -15,7 +15,3 @@ export {
  * Helper function untuk halaman Prediksi LSTM
  * @returns {Promise<Cesium.Viewer|null>}
  */
-export async function initializeLSTMPage() {
-  const { initializeCesiumPage } = await import('./core/cesiumInitializer.js');
-  return await initializeCesiumPage('LSTM_PREDICTION');
-}

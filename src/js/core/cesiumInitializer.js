@@ -138,3 +138,7 @@ export async function initializeCesiumApp() {
 export async function initializeBaseMap() {
   return await initializeCesiumPage('BASE_MAP');
 }
+
+export async function initializeLSTMPage() {
+    return await initializeCesiumPage('LSTM_PREDICTION');
+}
