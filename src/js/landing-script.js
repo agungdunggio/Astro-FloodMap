@@ -185,19 +185,19 @@ function initThreeJSRain() {
         }
         rain.geometry.attributes.position.needsUpdate = true;
 
-        const flashOverlay = document.getElementById('flash-overlay');
+        // const flashOverlay = document.getElementById('flash-overlay'); // Flash overlay tetap dikomentar
 
         if (lightningFlashCooldown <= 0 && Math.random() < 0.008) { // Peluang flash
             lightning.intensity = 2 + Math.random() * 3; // Intensitas flash
-            if(flashOverlay) flashOverlay.style.opacity = "0.7";
-            setTimeout(() => { if(flashOverlay) flashOverlay.style.opacity = "0"; }, 80 + Math.random()*40);
+            // if(flashOverlay) flashOverlay.style.opacity = "0.7"; // Flash overlay dikomentar
+            // setTimeout(() => { if(flashOverlay) flashOverlay.style.opacity = "0"; }, 80 + Math.random()*40);
             lightningFlashCooldown = 150 + Math.random() * 200; // Cooldown setelah flash
         }
         
         if (lightningBoltCooldown <= 0 && Math.random() < 0.01) { // Peluang kilat
             createLightningBolt();
-            if(flashOverlay) flashOverlay.style.opacity = "0.5"; // Flash lebih redup untuk kilat
-            setTimeout(() => { if(flashOverlay) flashOverlay.style.opacity = "0"; }, 60 + Math.random()*30);
+            // if(flashOverlay) flashOverlay.style.opacity = "0.5"; // Flash overlay dikomentar
+            // setTimeout(() => { if(flashOverlay) flashOverlay.style.opacity = "0"; }, 60 + Math.random()*30);
             lightningBoltCooldown = 200 + Math.random() * 300; // Cooldown setelah kilat
         }
 
