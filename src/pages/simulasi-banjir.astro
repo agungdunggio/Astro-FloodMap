@@ -28,7 +28,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     
     <script>
       import { initializeCesiumApp } from '../js/mainCesium.js';
-      initializeCesiumApp();
+      import { initializePage } from '../js/utils/pageUtils.js';
+      
+      // Initialize dengan error handling yang lebih baik
+      initializePage(initializeCesiumApp, 'Simulasi Banjir 3D');
     </script>
     
     <style>

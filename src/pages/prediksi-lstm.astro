@@ -1,0 +1,134 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Prediksi LSTM - Curah Hujan 90 Hari">
+  <main>  
+    <div id="cesiumContainer"></div>
+    
+    <!-- UI untuk Prediksi LSTM -->
+    <div id="lstmControls" class="lstm-panel">
+      <h3>🧠 Prediksi LSTM</h3>
+      <p>Prediksi curah hujan hingga 90 hari ke depan</p>
+      
+      <div class="prediction-controls">
+        <button id="loadPrediction" class="control-button">
+          <ion-icon name="analytics-outline"></ion-icon> 
+          Muat Prediksi
+        </button>
+        
+        <button id="showChart" class="control-button">
+          <ion-icon name="bar-chart-outline"></ion-icon>
+          Tampilkan Grafik
+        </button>
+      </div>
+      
+      <!-- Area untuk chart/grafik -->
+      <div id="predictionChart" class="chart-container">
+        <!-- Chart akan dimuat di sini -->
+      </div>
+    </div>
+    
+    <script>
+      import { initializeLSTMPage } from '../js/mainCesium.js';
+      import { initializePage } from '../js/utils/pageUtils.js';
+      
+      // Initialize halaman dengan konfigurasi LSTM
+      initializePage(initializeLSTMPage, 'Prediksi LSTM');
+      
+      // Event listeners untuk UI controls
+      document.addEventListener('DOMContentLoaded', () => {
+        const loadBtn = document.getElementById('loadPrediction');
+        const chartBtn = document.getElementById('showChart');
+        
+        if (loadBtn) {
+          loadBtn.addEventListener('click', () => {
+            console.log('🧠 Loading LSTM prediction...');
+            // TODO: Implement LSTM data loading
+          });
+        }
+        
+        if (chartBtn) {
+          chartBtn.addEventListener('click', () => {
+            console.log('📊 Showing prediction chart...');
+            // TODO: Implement chart display
+          });
+        }
+      });
+    </script>
+    
+    <style>
+      #cesiumContainer {
+        width: 100%;
+        height: 100vh;
+        display: block;
+      }
+      
+      .lstm-panel {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(20px);
+        border-radius: 16px;
+        padding: 20px;
+        min-width: 300px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      }
+      
+      .lstm-panel h3 {
+        margin: 0 0 10px 0;
+        color: white;
+        font-size: 1.2em;
+      }
+      
+      .lstm-panel p {
+        margin: 0 0 20px 0;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.9em;
+      }
+      
+      .prediction-controls {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+      
+      .control-button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 10px 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 0.9em;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+      }
+      
+      .control-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+      }
+      
+      .chart-container {
+        min-height: 200px;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255, 255, 255, 0.6);
+        font-style: italic;
+      }
+      
+      .chart-container:empty::after {
+        content: "📊 Area grafik prediksi";
+      }
+    </style>
+  </main>
+</BaseLayout>
