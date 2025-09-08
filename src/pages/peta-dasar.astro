@@ -41,11 +41,12 @@ import ForecastModal from '../components/forecast/ForecastModal.vue';
     <ForecastModal client:load />
     
     <script>
-      import { initializePetaDasarPageUI } from '../js/uiControl/petaDasarUiControls.js';
       import { initializeBaseMap } from "../js/mainCesium.js";
+      import { initializePage } from '../js/utils/pageUtils.js';
       
-      initializeBaseMap();
-      initializePetaDasarPageUI();
+      // Initialize dengan error handling yang lebih baik
+      // Note: initializePetaDasarPageUI sudah dipanggil di dalam initializeBaseMap
+      initializePage(initializeBaseMap, 'Peta Dasar Gorontalo');
     </script>
     
     <style>@import '../style/peta-dasar-style.css';</style>

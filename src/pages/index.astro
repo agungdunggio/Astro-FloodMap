@@ -27,7 +27,7 @@ import LandingLayout from "../layouts/LandingLayout.astro";
             </button>
         </header>
         
-        <section class="mt-32 mb-96 md:mt-24 flex flex-col md:flex-row items-center">
+        <section class="mt-32 mb-96 md:mt-24 flex flex-col md:flex-row items-center" >
             <div class="md:w-1/2 mb-12 md:mb-0 text-center md:text-left">
                 <h2 class="text-4xl sm:text-5xl md:text-6xl font-bold leading-tight mb-6">Simulasi <span class="text-blue-300">Banjir</span> 3D Kota Gorontalo</h2>
                 <p class="text-lg md:text-xl text-gray-300 mb-8">Rasakan dampak banjir secara real-time melalui simulasi spasial 3D Kota Gorontalo.
@@ -44,7 +44,7 @@ Jelajahi bagaimana air mengalir, menggenangi wilayah, dan mempengaruhi infrastru
             </div>
         </section>
         
-        <section class="mt-48 md:mt-64 md:mb-48 px-6">
+        <section class="mt-48 md:mt-64 md:mb-48 px-6" id="features">
             <div class="container mx-auto max-w-6xl">
                 <h2 class="text-3xl md:text-4xl font-bold text-center mb-6">Fitur Unggulan G-Flood</h2>
                 <p class="text-center text-slate-300/90 max-w-3xl mx-auto mb-12 md:mb-16 text-lg leading-relaxed">
@@ -75,7 +75,7 @@ Jelajahi bagaimana air mengalir, menggenangi wilayah, dan mempengaruhi infrastru
             </div>
         </section>
 
-         <section id="skills" class="py-16 md:py-20">
+         <section class="py-16 md:py-20" id="tools">
             <div class="container mx-auto px-6">
                 <div class="mt-12 md:mt-16">
                     <h3 class="text-2xl font-semibold mb-8 md:mb-12 text-center text-white">Tools & Technologies</h3>
@@ -98,12 +98,18 @@ Jelajahi bagaimana air mengalir, menggenangi wilayah, dan mempengaruhi infrastru
                         <div title="Astro" class="glass-card w-20 h-20 md:w-24 md:h-24 p-2 flex items-center justify-center hover:shadow-lg transition duration-300">
                            <img src="https://astro.build/assets/press/astro-icon-light.svg" alt="Astro" class="w-10 h-10 md:w-12 md:h-12">
                         </div>
+                        <div title="BMKG" class="glass-card w-20 h-20 md:w-24 md:h-24 flex items-center justify-center hover:shadow-2xl transition duration-300">
+                           <img src="/icon/icon_bmkg.svg" alt="BMKG" class="w-10 h-10 md:w-12 md:h-12 object-contain">
+                        </div>
+                        <div title="Deep_Learning/LSTM" class="glass-card w-20 h-20 md:w-24 md:h-24 flex items-center justify-center hover:shadow-2xl transition duration-300">
+                           <img src="/icon/lstm.svg" alt="LSTM" class="w-10 h-10 md:w-12 md:h-12 brightness-0 invert">
+                        </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <section id="projects" class="py-20">
+        <section id="technologies" class="py-20">
             <div class="container mx-auto px-6">
                 <h2 class="text-3xl md:text-4xl font-bold text-center mb-4 text-white">Teknologi Inti G-Flood</h2>
                 <p class="text-center text-gray-300 max-w-3xl mx-auto mb-8 text-lg leading-relaxed">
@@ -291,7 +297,7 @@ Jelajahi bagaimana air mengalir, menggenangi wilayah, dan mempengaruhi infrastru
             </div>
         </section>
         
-        <section class="mt-24 md:mt-32 mb-16 md:mb-20 text-center">
+        <section class="mt-24 md:mt-32 mb-16 md:mb-20 text-center" id="risk-analysis">
             <h2 class="text-3xl md:text-4xl font-bold mb-6">Tinjau Risiko Banjir Kota Gorontalo</h2>
             <p class="text-lg md:text-xl text-gray-300 mb-8 max-w-2xl mx-auto px-6 md:px-12">Gunakan simulasi 3D spasial untuk menganalisis skenario banjir di wilayah perkotaan.</p>
             <button id="mulaiEksplorasiBtn" class="btn-rain px-8 py-3 md:px-10 md:py-4 rounded-full font-semibold text-lg md:text-xl flex items-center mx-auto">
