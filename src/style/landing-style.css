@@ -125,7 +125,7 @@ body {
     animation: float 3s ease-in-out infinite alternate; 
 }
 
-#flash-overlay {
+/* #flash-overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -136,7 +136,7 @@ body {
     pointer-events: none;
     transition: opacity 0.1s ease-out; 
     z-index: 100; 
-}
+} */
         
 @keyframes float {
     0% {

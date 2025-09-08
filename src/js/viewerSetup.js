@@ -15,7 +15,7 @@ export async function createViewer() {
     timeline: true,
     animation: true,
     geocoder: false,
-    homeButton: false,
+    homeButton: true,
     // baseLayerPicker: false,
     sceneModePicker: false,
     // creditContainer: document.createElement("div"),
@@ -32,6 +32,12 @@ export async function createViewer() {
   scene.globe.depthTestAgainstTerrain = true;
   scene.camera.setView(targetLocation);
   scene.verticalExaggeration = 1; // Sesuai kode asli Anda
+
+  // Custom home button behavior - navigasi ke halaman utama
+  viewer.homeButton.viewModel.command.beforeExecute.addEventListener(function(e) {
+    e.cancel = true; // Cancel default home behavior
+    window.location.href = '/'; // Navigate to home page
+  });
 
   return viewer;
 }
