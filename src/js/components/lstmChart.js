@@ -104,33 +104,173 @@ export async function createPredictionChart(container, chartData) {
     container.style.opacity = '1';
   }, 150);
 
-  // Create compact canvas for Chart.js
+  // Create compact canvas for Chart.js dengan horizontal scroll support
   setTimeout(() => {
-    const canvasContainer = document.createElement('div');
-    canvasContainer.style.cssText = `
+    const chartWrapper = document.createElement('div');
+    chartWrapper.style.cssText = `
       position: relative;
-      height: 280px;
       margin-bottom: 16px;
       background: linear-gradient(135deg, rgba(0, 0, 0, 0.15) 0%, rgba(59, 130, 246, 0.03) 100%);
       border: 1px solid rgba(59, 130, 246, 0.15);
       border-radius: 12px;
-      padding: 16px;
       backdrop-filter: blur(8px);
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+      overflow: hidden;
     `;
+
+    // Create scroll wrapper untuk chart yang bisa di-scroll
+    const scrollWrapper = document.createElement('div');
+    scrollWrapper.style.cssText = `
+      width: 100%;
+      height: 280px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scroll-behavior: smooth;
+      padding: 0;
+    `;
+
+    const canvasContainer = document.createElement('div');
+    // Jika data > 15, buat scrollable horizontal
+    const isScrollable = labels.length > 15;
+    const containerWidth = isScrollable ? `${Math.max(labels.length * 45, 800)}px` : '100%';
+    
+    canvasContainer.style.cssText = `
+      position: relative;
+      height: 100%;
+      width: ${containerWidth};
+      min-width: ${isScrollable ? containerWidth : '100%'};
+      padding: 16px;
+    `;
+    
+    // Add scroll wheel support untuk horizontal scroll
+    if (isScrollable) {
+      scrollWrapper.addEventListener('wheel', (e) => {
+        if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+          e.preventDefault();
+          scrollWrapper.scrollLeft += e.deltaY;
+        }
+      }, { passive: false });
+      
+      // Add touch support untuk mobile
+      let startX = 0;
+      scrollWrapper.addEventListener('touchstart', (e) => {
+        startX = e.touches[0].clientX;
+      }, { passive: true });
+      
+      scrollWrapper.addEventListener('touchmove', (e) => {
+        const currentX = e.touches[0].clientX;
+        const diffX = startX - currentX;
+        scrollWrapper.scrollLeft += diffX;
+        startX = currentX;
+        e.preventDefault();
+      }, { passive: false });
+    }
+    
+    if (isScrollable) {
+      // Add scroll controls
+      const scrollControls = document.createElement('div');
+      scrollControls.style.cssText = `
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        display: flex;
+        gap: 4px;
+        z-index: 10;
+      `;
+      
+      const leftBtn = document.createElement('button');
+      leftBtn.innerHTML = '‹';
+      leftBtn.style.cssText = `
+        background: rgba(59, 130, 246, 0.8);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        font-size: 14px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      `;
+      
+      const rightBtn = document.createElement('button');
+      rightBtn.innerHTML = '›';
+      rightBtn.style.cssText = leftBtn.style.cssText;
+      
+      // Add hover effects
+      [leftBtn, rightBtn].forEach(btn => {
+        btn.addEventListener('mouseenter', () => {
+          btn.style.background = 'rgba(37, 99, 235, 0.9)';
+          btn.style.transform = 'scale(1.1)';
+        });
+        btn.addEventListener('mouseleave', () => {
+          btn.style.background = 'rgba(59, 130, 246, 0.8)';
+          btn.style.transform = 'scale(1)';
+        });
+      });
+      
+      // Add scroll functionality
+      leftBtn.addEventListener('click', () => {
+        scrollWrapper.scrollBy({ left: -200, behavior: 'smooth' });
+      });
+      
+      rightBtn.addEventListener('click', () => {
+        scrollWrapper.scrollBy({ left: 200, behavior: 'smooth' });
+      });
+      
+      scrollControls.appendChild(leftBtn);
+      scrollControls.appendChild(rightBtn);
+      chartWrapper.appendChild(scrollControls);
+      
+      // Add scroll indicator dengan visual feedback
+      const scrollIndicator = document.createElement('div');
+      scrollIndicator.style.cssText = `
+        position: absolute;
+        bottom: 8px;
+        right: 8px;
+        background: rgba(59, 130, 246, 0.8);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.7em;
+        font-weight: 600;
+        z-index: 10;
+        pointer-events: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      `;
+      scrollIndicator.innerHTML = `📊 ${labels.length} hari • Swipe/Scroll →`;
+      chartWrapper.appendChild(scrollIndicator);
+      
+      // Add scroll position feedback
+      scrollWrapper.addEventListener('scroll', () => {
+        const scrollPercentage = Math.round((scrollWrapper.scrollLeft / (scrollWrapper.scrollWidth - scrollWrapper.clientWidth)) * 100);
+        scrollIndicator.innerHTML = `📊 ${labels.length} hari • ${scrollPercentage}%`;
+      });
+    }
     
     const canvas = document.createElement('canvas');
     canvas.id = 'predictionChart';
     canvasContainer.appendChild(canvas);
-    container.appendChild(canvasContainer);
+    
+    // Assemble the structure
+    if (isScrollable) {
+      scrollWrapper.appendChild(canvasContainer);
+      chartWrapper.appendChild(scrollWrapper);
+    } else {
+      chartWrapper.appendChild(canvasContainer);
+    }
+    
+    container.appendChild(chartWrapper);
     
     // Initialize chart setelah DOM ready
-    initializeChart(canvas, labels, values, metadata, container);
+    initializeChart(canvas, labels, values, metadata, container, isScrollable);
   }, 200);
 }
 
 // Separate chart initialization untuk performance
-function initializeChart(canvas, labels, values, metadata, container) {
+function initializeChart(canvas, labels, values, metadata, container, isScrollable = false) {
 
   // Destroy existing chart instance
   if (chartInstance) {
@@ -174,9 +314,9 @@ function initializeChart(canvas, labels, values, metadata, container) {
       layout: {
         padding: {
           top: 20,
-          right: 10,
+          right: isScrollable ? 5 : 10,
           bottom: 10,
-          left: 10
+          left: isScrollable ? 5 : 10
         }
       },
       plugins: {
@@ -268,11 +408,12 @@ function initializeChart(canvas, labels, values, metadata, container) {
           ticks: {
             color: 'rgba(255, 255, 255, 0.8)',
             font: {
-              size: 10,
+              size: isScrollable ? 9 : 10,
               weight: '500'
             },
-            maxRotation: 45,
-            minRotation: 0
+            maxRotation: isScrollable ? 0 : 45,
+            minRotation: 0,
+            maxTicksLimit: isScrollable ? undefined : 15
           },
           grid: {
             color: 'rgba(255, 255, 255, 0.08)',
@@ -517,20 +658,6 @@ export function showErrorState(container, errorMessage) {
       <p style="color: rgba(255, 255, 255, 0.6); text-align: center; margin: 0 0 20px 0; font-size: 0.8em;">
         Silakan periksa koneksi internet dan coba lagi
       </p>
-      <button id="retryPrediction" style="
-        background: linear-gradient(135deg, #dc2626, #b91c1c);
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 0.9em;
-        font-weight: 500;
-        transition: all 0.3s ease;
-        box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
-      " onmouseover="this.style.background='linear-gradient(135deg, #b91c1c, #991b1b)'; this.style.transform='translateY(-1px)';" onmouseout="this.style.background='linear-gradient(135deg, #dc2626, #b91c1c)'; this.style.transform='translateY(0)';">
-        🔄 Coba Lagi
-      </button>
     </div>
   `;
 }

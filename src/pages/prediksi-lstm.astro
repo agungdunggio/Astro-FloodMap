@@ -131,7 +131,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
               let errorMessage = 'Gagal mengambil data LSTM';
               if (err instanceof Error) {
                 if (err.message.includes('fetch') || err.name === 'TypeError') {
-                  errorMessage = 'Tidak dapat terhubung ke server LSTM. Pastikan server berjalan di http://127.0.0.1:8000';
+                  errorMessage = 'Terjadi kesalahan saat mengambil data LSTM';
                 } else {
                   errorMessage = err.message;
                 }
@@ -249,7 +249,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         scrollbar-width: thin;
         scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
         height: auto;  
-        max-height: calc(100vh - 160px); /* sisakan ruang untuk timeline */
+        max-height: calc(100vh - 250px); /* sisakan ruang untuk timeline */
         overflow-y: auto;
       }
       
@@ -502,11 +502,51 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         border-radius: 8px;
       }
 
-      .chart-container canvas {
-        width: 100% !important;
-        height: auto !important;
-        max-height: 260px; /* batas wajar biar proporsional */
-      }
+        .chart-container canvas {
+          width: 100% !important;
+          height: auto !important;
+          max-height: 260px; /* batas wajar biar proporsional */
+        }
+
+        /* Horizontal Scrollbar untuk Chart */
+        .chart-container div[style*="overflow-x: auto"] {
+          scrollbar-width: thin;
+          scrollbar-color: rgba(59, 130, 246, 0.7) rgba(255, 255, 255, 0.15);
+        }
+
+        .chart-container div[style*="overflow-x: auto"]::-webkit-scrollbar {
+          height: 8px;
+          background: rgba(255, 255, 255, 0.05);
+        }
+
+        .chart-container div[style*="overflow-x: auto"]::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 4px;
+          margin: 0 4px;
+        }
+
+        .chart-container div[style*="overflow-x: auto"]::-webkit-scrollbar-thumb {
+          background: linear-gradient(90deg, rgba(59, 130, 246, 0.8), rgba(96, 165, 250, 0.8));
+          border-radius: 4px;
+          transition: all 0.3s ease;
+          border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .chart-container div[style*="overflow-x: auto"]::-webkit-scrollbar-thumb:hover {
+          background: linear-gradient(90deg, rgba(37, 99, 235, 0.9), rgba(59, 130, 246, 0.9));
+          box-shadow: 0 2px 4px rgba(59, 130, 246, 0.4);
+        }
+
+        /* Scroll indicator untuk mobile */
+        @media (max-width: 768px) {
+          .chart-container div[style*="overflow-x: auto"] {
+            scrollbar-width: auto;
+          }
+          
+          .chart-container div[style*="overflow-x: auto"]::-webkit-scrollbar {
+            height: 10px;
+          }
+        }
       
       .empty-state {
         display: flex;
