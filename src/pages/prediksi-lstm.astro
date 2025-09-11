@@ -21,13 +21,20 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       <!-- Input Controls -->
       <div class="input-group">
         <label for="predictionDays"><ion-icon name="calendar-outline"></ion-icon> Jumlah Hari Prediksi:</label>
-        <select id="predictionDays" class="prediction-input">
-          <option value="7">7 Hari</option>
-          <option value="14">14 Hari</option>
-          <option value="30">30 Hari</option>
-          <option value="60">60 Hari</option>
-          <option value="90">90 Hari</option>
-        </select>
+        <div class="input-wrapper">
+          <input 
+            type="number" 
+            id="predictionDays" 
+            class="prediction-input number-input"
+            min="1" 
+            max="90" 
+            value="7"
+            placeholder="Masukkan jumlah hari (1-90)"
+          />
+          <div class="input-helper">
+            <small>Min: 1 hari, Max: 90 hari</small>
+          </div>
+        </div>
       </div>
 
       <div class="prediction-controls">
@@ -58,6 +65,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       
       let currentPredictionData = null;
 
+
       function initializeLSTMUIControls() {
         const toggleButton = document.getElementById('toggleLSTMPanel') as HTMLButtonElement;
         const lstmControls = document.getElementById('lstmControls') as HTMLElement;
@@ -79,42 +87,115 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         }
 
 
-        // Load Prediction Button
+        // Load Prediction Button dengan debouncing
         if (loadBtn) {
-          loadBtn.addEventListener('click', async () => {
-            const daysInput = document.getElementById('predictionDays') as HTMLSelectElement;
-            const nDays = parseInt(daysInput?.value || '7') || 7;
-
-            console.log(`🧠 Loading LSTM prediction for ${nDays} days...`);
-
-            try {
-              showLoadingState(chartContainer);
-
-              loadBtn.disabled = true;
-              loadBtn.classList.add('opacity-50');
-
-              const data = await fetchLSTMPrediction(nDays);
-              currentPredictionData = data;
-
-              const chartData = formatPredictionForChart(data);
-              createPredictionChart(chartContainer, chartData);
-
-              // Enable show chart button
-              if (showChartBtn) {
-                showChartBtn.disabled = false;
-                showChartBtn.classList.remove('opacity-50');
-              }
-
-              console.log('✅ Prediction loaded successfully');
-
-            } catch (err) {
-              console.error('❌ Error loading prediction:', err);
-              showErrorState(chartContainer, 'Gagal memuat prediksi LSTM');
-            } finally {
-              loadBtn.disabled = false;
-              loadBtn.classList.remove('opacity-50');
+          let isLoading = false;
+          
+          const loadPrediction = async () => {
+            if (isLoading) return;
+            
+            const daysInput = document.getElementById('predictionDays') as HTMLInputElement;
+            const nDays = parseInt(daysInput?.value || '7');
+            
+            // Validasi input
+            if (isNaN(nDays) || nDays < 1 || nDays > 90) {
+              // Modern toast notification instead of alert
+              showToast('Jumlah hari harus berupa angka antara 1-90', 'warning');
+              return;
             }
-          });
+
+            isLoading = true;
+            try {
+              // Show loading state dengan animation
+              showLoadingState(chartContainer);
+              loadBtn.disabled = true;
+              loadBtn.style.opacity = '0.6';
+              loadBtn.innerHTML = '<div class="loading-spinner"></div> Memuat...';
+
+              // Call API
+              const apiData = await fetchLSTMPrediction(nDays);
+              
+              // Store data
+              currentPredictionData = apiData;
+
+              // Format data for chart
+              const chartData = formatPredictionForChart(apiData);
+              
+              // Create chart dengan fade effect
+              await createPredictionChart(chartContainer, chartData);
+              
+              // Show success toast
+              showToast(`Berhasil memuat prediksi ${nDays} hari`, 'success');
+              
+            } catch (err) {
+              let errorMessage = 'Gagal mengambil data LSTM';
+              if (err instanceof Error) {
+                if (err.message.includes('fetch') || err.name === 'TypeError') {
+                  errorMessage = 'Tidak dapat terhubung ke server LSTM. Pastikan server berjalan di http://127.0.0.1:8000';
+                } else {
+                  errorMessage = err.message;
+                }
+              }
+              
+              showErrorState(chartContainer, errorMessage);
+              showToast(errorMessage, 'error');
+              
+            } finally {
+              // Reset button state dengan delay
+              setTimeout(() => {
+                loadBtn.disabled = false;
+                loadBtn.style.opacity = '1';
+                loadBtn.innerHTML = '<ion-icon name="bar-chart-outline"></ion-icon> Muat Prediksi';
+                isLoading = false;
+              }, 200);
+            }
+          };
+          
+          loadBtn.addEventListener('click', loadPrediction);
+        }
+        
+        // Toast notification system
+        function showToast(message: string, type: 'success' | 'warning' | 'error') {
+          const toast = document.createElement('div');
+          toast.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            color: white;
+            font-size: 0.9em;
+            font-weight: 500;
+            z-index: 10000;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.3s ease;
+            max-width: 300px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+          `;
+          
+          const colors = {
+            success: 'background: linear-gradient(135deg, #10b981, #047857); border: 1px solid #059669;',
+            warning: 'background: linear-gradient(135deg, #f59e0b, #d97706); border: 1px solid #f59e0b;',
+            error: 'background: linear-gradient(135deg, #ef4444, #dc2626); border: 1px solid #ef4444;'
+          };
+          
+          toast.style.cssText += colors[type];
+          toast.textContent = message;
+          document.body.appendChild(toast);
+          
+          // Animate in
+          setTimeout(() => {
+            toast.style.opacity = '1';
+            toast.style.transform = 'translateX(0)';
+          }, 100);
+          
+          // Auto remove
+          setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(100%)';
+            setTimeout(() => toast.remove(), 300);
+          }, 3000);
         }
 
         // Show Chart Button (toggle tampil/sembunyi chart)
@@ -142,28 +223,44 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         display: block;
       }
       
-      /* Panel Styling */
+      /* Panel Styling - Optimized */
       .lstm-panel {
         position: absolute;
         top: 70px;
         left: 20px;
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(20px);
-        border-radius: 16px;
-        padding: 20px;
-        min-width: 350px;
-        max-width: 450px;
-        max-height: calc(100vh - 120px);
+        background: rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(16px);
+        border-radius: 12px;
+        padding: 16px;
+        width: 380px;
+        max-width: min(380px, calc(100vw - 40px));
+        max-height: calc(100vh - 100px);
         overflow-y: auto;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-        display: none; /* default tertutup */
+        overflow-x: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+        display: none;
         opacity: 0;
-        transform: translateY(-10px);
-        transition: all 0.3s ease;
+        transform: translateY(-8px) scale(0.98);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         flex-direction: column;
-        gap: 15px;
+        gap: 12px;
         z-index: 999;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+      }
+      
+      .lstm-panel::-webkit-scrollbar {
+        width: 4px;
+      }
+      
+      .lstm-panel::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      
+      .lstm-panel::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 2px;
       }
 
       #lstmControls .control-button {
@@ -192,19 +289,21 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       .lstm-panel.open {
         display: flex;
         opacity: 1;
-        transform: translateY(0);
+        transform: translateY(0) scale(1);
       }
       
       .lstm-panel h3 {
-        margin: 0;
+        margin: 0 0 8px 0;
         color: white;
-        font-size: 1.2em;
+        font-size: 1.1em;
+        font-weight: 600;
       }
       
       .lstm-panel p {
-        margin: 0;
-        color: rgba(255, 255, 255, 0.8);
-        font-size: 0.9em;
+        margin: 0 0 12px 0;
+        color: rgba(255, 255, 255, 0.75);
+        font-size: 0.85em;
+        line-height: 1.4;
       }
       
       .input-group {
@@ -215,21 +314,28 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       
       .input-group label {
         color: rgba(255, 255, 255, 0.9);
-        font-size: 0.9em;
-        margin-bottom: 8px;
+        font-size: 0.85em;
+        margin-bottom: 6px;
         font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      
+      .input-wrapper {
+        width: 100%;
       }
       
       .prediction-input {
         width: 100%;
-        padding: 10px 12px;
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 8px;
+        padding: 8px 10px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 6px;
         color: white;
-        font-size: 0.9em;
-        backdrop-filter: blur(10px);
-        transition: all 0.3s ease;
+        font-size: 0.85em;
+        backdrop-filter: blur(8px);
+        transition: all 0.2s ease;
       }
       
       .prediction-input:focus {
@@ -238,9 +344,38 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
       }
       
-      .prediction-input option {
-        background: rgba(30, 30, 30, 0.95);
-        color: white;
+      .prediction-input.number-input {
+        -moz-appearance: textfield;
+      }
+      
+      .prediction-input.number-input::-webkit-outer-spin-button,
+      .prediction-input.number-input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+      
+      .prediction-input::placeholder {
+        color: rgba(255, 255, 255, 0.5);
+        font-style: italic;
+      }
+      
+      .input-helper {
+        margin-top: 4px;
+      }
+      
+      .input-helper small {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.75em;
+        font-style: italic;
+      }
+      
+      .prediction-input:invalid {
+        border-color: rgba(239, 68, 68, 0.6);
+        background: rgba(239, 68, 68, 0.1);
+      }
+      
+      .prediction-input:invalid:focus {
+        box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
       }
 
       .prediction-controls {
@@ -348,15 +483,16 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
       }
       
-      /* Chart */
+      /* Chart - Optimized */
       .chart-container {
-        min-height: 250px;
-        background: rgba(0, 0, 0, 0.2);
+        min-height: 200px;
+        background: rgba(0, 0, 0, 0.15);
         border-radius: 8px;
-        padding: 20px;
+        padding: 12px;
         color: rgba(255, 255, 255, 0.6);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        margin-top: 25px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        margin-top: 16px;
+        transition: opacity 0.3s ease;
       }
       
       .empty-state {
@@ -366,8 +502,8 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         justify-content: center;
         text-align: center;
         height: 100%;
-        min-height: 200px;
-        padding: 20px;
+        min-height: 160px;
+        padding: 16px;
       }
       
       .empty-title {
@@ -503,6 +639,24 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         /* Kombinasi untuk icon putih */
         .brightness-0.invert {
           filter: brightness(0) invert(1) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+        }
+        
+        /* Loading Spinner */
+        .loading-spinner {
+          display: inline-block;
+          width: 16px;
+          height: 16px;
+          border: 2px solid rgba(255, 255, 255, 0.3);
+          border-radius: 50%;
+          border-top-color: white;
+          animation: spin 1s ease-in-out infinite;
+          margin-right: 6px;
+        }
+        
+        @keyframes spin {
+          to { 
+            transform: rotate(360deg); 
+          }
         }
     </style>
   </main>
