@@ -248,6 +248,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         z-index: 999;
         scrollbar-width: thin;
         scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+        height: auto;  
+        max-height: calc(100vh - 160px); /* sisakan ruang untuk timeline */
+        overflow-y: auto;
       }
       
       .lstm-panel::-webkit-scrollbar {
@@ -485,14 +488,24 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       
       /* Chart - Optimized */
       .chart-container {
-        min-height: 200px;
-        background: rgba(0, 0, 0, 0.15);
-        border-radius: 8px;
-        padding: 12px;
         color: rgba(255, 255, 255, 0.6);
         border: 1px solid rgba(255, 255, 255, 0.08);
-        margin-top: 16px;
         transition: opacity 0.3s ease;
+        min-height: 200px;
+        height: auto;   /* ini penting */
+        background: rgba(0, 0, 0, 0.2);
+        padding: 16px;
+        margin-top: 16px;
+        height: auto;        /* biar sesuai isi */
+        min-height: unset;   /* jangan dipaksa tinggi minimal */
+        background: rgba(0,0,0,0.25);
+        border-radius: 8px;
+      }
+
+      .chart-container canvas {
+        width: 100% !important;
+        height: auto !important;
+        max-height: 260px; /* batas wajar biar proporsional */
       }
       
       .empty-state {
