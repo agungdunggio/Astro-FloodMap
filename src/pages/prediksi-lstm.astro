@@ -6,55 +6,133 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   <main>  
     <div id="cesiumContainer"></div>
     
-    <!-- UI untuk Prediksi LSTM -->
+     <!-- Tombol Toggle untuk membuka/menutup LSTM Panel -->
+     <button id="toggleLSTMPanel" class="control-button primary">
+      <img src="/icon/lstm.svg" alt="LSTM" class="icon-lstm brightness-0 invert toggle-icon-lstm">
+      <ion-icon name="close-outline" class="toggle-icon-close"></ion-icon>
+      <span class="toggle-label">Prediksi LSTM</span>
+    </button>
+
+    <!-- LSTM Panel -->
     <div id="lstmControls" class="lstm-panel">
-      <h3>🧠 Prediksi LSTM</h3>
-      <p>Prediksi curah hujan hingga 90 hari ke depan</p>
-      
+      <h3><img src="/icon/lstm.svg" alt="LSTM" class="icon-lstm-header brightness-0 invert"> Prediksi LSTM</h3>
+      <p>Prediksi curah hujan menggunakan model Deep Learning</p>
+
+      <!-- Input Controls -->
+      <div class="input-group">
+        <label for="predictionDays"><ion-icon name="calendar-outline"></ion-icon> Jumlah Hari Prediksi:</label>
+        <select id="predictionDays" class="prediction-input">
+          <option value="7">7 Hari</option>
+          <option value="14">14 Hari</option>
+          <option value="30">30 Hari</option>
+          <option value="60">60 Hari</option>
+          <option value="90">90 Hari</option>
+        </select>
+      </div>
+
       <div class="prediction-controls">
-        <button id="loadPrediction" class="control-button">
-          <ion-icon name="analytics-outline"></ion-icon> 
-          Muat Prediksi
-        </button>
-        
-        <button id="showChart" class="control-button">
-          <ion-icon name="bar-chart-outline"></ion-icon>
-          Tampilkan Grafik
+        <button id="loadPrediction" class="control-button primary">
+          <ion-icon name="bar-chart-outline"></ion-icon> Muat Prediksi
         </button>
       </div>
-      
+
       <!-- Area untuk chart/grafik -->
       <div id="predictionChart" class="chart-container">
-        <!-- Chart akan dimuat di sini -->
+        <div class="empty-state">
+          <div class="empty-icon"><img src="/icon/lstm.svg" alt="LSTM" class="icon-lstm-large brightness-0 invert"></div>
+          <h4 class="empty-title">Prediksi LSTM Siap</h4>
+          <p class="empty-text">Pilih jumlah hari dan klik "Muat Prediksi" untuk memulai analisis curah hujan</p>
+        </div>
       </div>
     </div>
-    
+
     <script>
-      import { initializeLSTMPage } from '../js/core/cesiumInitializer.js';
+      import { initializeCesiumPage } from '../js/core/cesiumInitializer.js';
       import { initializePage } from '../js/utils/pageUtils.js';
+      import { fetchLSTMPrediction, formatPredictionForChart } from '../js/fetch/lstmPredictionApi.js';
+      import { createPredictionChart, showLoadingState, showErrorState } from '../js/components/lstmChart.js';
       
       // Initialize halaman dengan konfigurasi LSTM
+      const initializeLSTMPage = () => initializeCesiumPage('LSTM_PREDICTION');
       initializePage(initializeLSTMPage, 'Prediksi LSTM');
       
-      // Event listeners untuk UI controls
-      document.addEventListener('DOMContentLoaded', () => {
-        const loadBtn = document.getElementById('loadPrediction');
-        const chartBtn = document.getElementById('showChart');
-        
+      let currentPredictionData = null;
+
+      function initializeLSTMUIControls() {
+        const toggleButton = document.getElementById('toggleLSTMPanel') as HTMLButtonElement;
+        const lstmControls = document.getElementById('lstmControls') as HTMLElement;
+        const loadBtn = document.getElementById('loadPrediction') as HTMLButtonElement;
+        const showChartBtn = document.getElementById('showChart') as HTMLButtonElement;
+        const chartContainer = document.getElementById('predictionChart') as HTMLElement;
+
+        // Toggle LSTM Panel
+        if (toggleButton && lstmControls) {
+          toggleButton.addEventListener('click', () => {
+            const isOpen = lstmControls.classList.toggle('open');
+            toggleButton.classList.toggle('open', isOpen);
+
+            const label = toggleButton.querySelector('.toggle-label');
+            if (label) {
+              label.textContent = isOpen ? 'Tutup Panel' : 'Prediksi LSTM';
+            }
+          });
+        }
+
+
+        // Load Prediction Button
         if (loadBtn) {
-          loadBtn.addEventListener('click', () => {
-            console.log('🧠 Loading LSTM prediction...');
-            // TODO: Implement LSTM data loading
+          loadBtn.addEventListener('click', async () => {
+            const daysInput = document.getElementById('predictionDays') as HTMLSelectElement;
+            const nDays = parseInt(daysInput?.value || '7') || 7;
+
+            console.log(`🧠 Loading LSTM prediction for ${nDays} days...`);
+
+            try {
+              showLoadingState(chartContainer);
+
+              loadBtn.disabled = true;
+              loadBtn.classList.add('opacity-50');
+
+              const data = await fetchLSTMPrediction(nDays);
+              currentPredictionData = data;
+
+              const chartData = formatPredictionForChart(data);
+              createPredictionChart(chartContainer, chartData);
+
+              // Enable show chart button
+              if (showChartBtn) {
+                showChartBtn.disabled = false;
+                showChartBtn.classList.remove('opacity-50');
+              }
+
+              console.log('✅ Prediction loaded successfully');
+
+            } catch (err) {
+              console.error('❌ Error loading prediction:', err);
+              showErrorState(chartContainer, 'Gagal memuat prediksi LSTM');
+            } finally {
+              loadBtn.disabled = false;
+              loadBtn.classList.remove('opacity-50');
+            }
           });
         }
-        
-        if (chartBtn) {
-          chartBtn.addEventListener('click', () => {
-            console.log('📊 Showing prediction chart...');
-            // TODO: Implement chart display
+
+        // Show Chart Button (toggle tampil/sembunyi chart)
+        if (showChartBtn && chartContainer) {
+          showChartBtn.addEventListener('click', () => {
+            const isHidden = chartContainer.style.display === 'none';
+            if (isHidden) {
+              chartContainer.style.display = 'block';
+              showChartBtn.innerHTML = '📉 Sembunyikan Grafik';
+            } else {
+              chartContainer.style.display = 'none';
+              showChartBtn.innerHTML = '📈 Tampilkan Grafik';
+            }
           });
         }
-      });
+      }
+
+      document.addEventListener('DOMContentLoaded', initializeLSTMUIControls);
     </script>
     
     <style>
@@ -64,71 +142,368 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         display: block;
       }
       
+      /* Panel Styling */
       .lstm-panel {
         position: absolute;
-        top: 20px;
+        top: 70px;
         left: 20px;
         background: rgba(255, 255, 255, 0.1);
         backdrop-filter: blur(20px);
         border-radius: 16px;
         padding: 20px;
-        min-width: 300px;
+        min-width: 350px;
+        max-width: 450px;
+        max-height: calc(100vh - 120px);
+        overflow-y: auto;
         border: 1px solid rgba(255, 255, 255, 0.2);
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        display: none; /* default tertutup */
+        opacity: 0;
+        transform: translateY(-10px);
+        transition: all 0.3s ease;
+        flex-direction: column;
+        gap: 15px;
+        z-index: 999;
+      }
+
+      #lstmControls .control-button {
+        position: static !important;   /* matikan sticky/fixed/absolute dari global */
+        inset: auto !important;        /* reset top/right/bottom/left */
+        transform: none !important;
+        margin-top: 12px;              /* jarak dari dropdown */
+        width: auto;                   /* jangan full; pakai auto atau 100% sesuai selera */
+        min-width: 160px;
+        align-self: flex-start;        /* tetap mulai dari kiri */
+      }
+
+      /* ——— Left align tombol Muat Prediksi ——— */
+      #lstmControls .prediction-controls {
+        display: block;        /* bukan flex/grid */
+        text-align: left;      /* pastikan kiri */
+        margin-top: 12px;
+      }
+
+      #lstmControls .prediction-controls .control-button {
+        display: inline-flex;  /* tombolnya sendiri tetap flex untuk ikon+teks */
+        margin: 0;             /* hilangkan kemungkinan auto-centering */
+      }
+
+
+      .lstm-panel.open {
+        display: flex;
+        opacity: 1;
+        transform: translateY(0);
       }
       
       .lstm-panel h3 {
-        margin: 0 0 10px 0;
+        margin: 0;
         color: white;
         font-size: 1.2em;
       }
       
       .lstm-panel p {
-        margin: 0 0 20px 0;
+        margin: 0;
         color: rgba(255, 255, 255, 0.8);
         font-size: 0.9em;
       }
       
-      .prediction-controls {
+      .input-group {
         display: flex;
-        gap: 10px;
-        margin-bottom: 20px;
+        flex-direction: column;
+        gap: 8px;
       }
       
-      .control-button {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border: none;
-        padding: 10px 16px;
-        border-radius: 8px;
-        cursor: pointer;
+      .input-group label {
+        color: rgba(255, 255, 255, 0.9);
         font-size: 0.9em;
-        display: flex;
-        align-items: center;
-        gap: 8px;
+        margin-bottom: 8px;
+        font-weight: 500;
+      }
+      
+      .prediction-input {
+        width: 100%;
+        padding: 10px 12px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        color: white;
+        font-size: 0.9em;
+        backdrop-filter: blur(10px);
         transition: all 0.3s ease;
       }
       
-      .control-button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+      .prediction-input:focus {
+        outline: none;
+        border-color: rgba(102, 126, 234, 0.5);
+        box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
       }
       
-      .chart-container {
-        min-height: 200px;
-        background: rgba(0, 0, 0, 0.2);
-        border-radius: 8px;
-        padding: 20px;
+      .prediction-input option {
+        background: rgba(30, 30, 30, 0.95);
+        color: white;
+      }
+
+      .prediction-controls {
+        margin-top: 12px;           /* jarak dari dropdown */
+        display: flex;
+        justify-content: flex-start; /* bisa diganti center kalau mau */
+      }
+
+      .prediction-controls .control-button {
+        width: auto;        /* biar tombol nggak melebar penuh */
+        min-width: 160px;   /* kasih ukuran minimal */
+        justify-content: center;
+      }
+
+       /* Toggle Button */
+       #toggleLSTMPanel {
+         position: absolute;
+         top: 20px;
+         left: 20px;
+         z-index: 1000;
+         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+         border: 1px solid #667eea;
+         color: white;
+       }
+       
+       #toggleLSTMPanel:hover:not(:disabled) {
+         background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+         border-color: #5a67d8;
+         box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+       }
+       
+       #toggleLSTMPanel ion-icon {
+         color: white;
+         filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+       }
+
+      .prediction-btn {
+        margin-top: 12px;   /* beri jarak dengan select */
+        width: 100%;        /* biar sama panjang dengan dropdown */
+        justify-content: center;
+      }
+      
+      #lstmControls .prediction-controls .control-button {
+        width: 100%;         /* penuh lebar container */
+        min-width: unset;    /* hapus batas minimal */
+        margin-top: 12px;
+        justify-content: center;
+      }
+      /* Buttons */
+      .control-button {
+        color: #2d3748;
+        border: 1px solid #e2e8f0;
+        padding: 12px 18px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 0.95em;
+        font-weight: 600;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: rgba(255, 255, 255, 0.6);
-        font-style: italic;
+        gap: 8px;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       }
       
-      .chart-container:empty::after {
-        content: "📊 Area grafik prediksi";
+      .control-button.primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: 1px solid #667eea;
+        color: white;
       }
+      
+      .control-button.secondary {
+        background: linear-gradient(135deg, #34d399 0%, #059669 100%);
+        border: 1px solid #34d399;
+        color: white;
+      }
+      
+      .control-button.primary:hover:not(:disabled) {
+        transform: translateY(-2px);
+        background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+        border-color: #5a67d8;
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+      }
+      
+      .control-button.secondary:hover:not(:disabled) {
+        transform: translateY(-2px);
+        background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+        border-color: #10b981;
+        box-shadow: 0 8px 25px rgba(52, 211, 153, 0.4);
+      }
+      
+      .control-button:active:not(:disabled) {
+        transform: translateY(0);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      }
+      
+      .control-button:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+        background: #cbd5e0;
+        border-color: #a0aec0;
+        color: #718096;
+        transform: none;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      }
+      
+      /* Chart */
+      .chart-container {
+        min-height: 250px;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+        padding: 20px;
+        color: rgba(255, 255, 255, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        margin-top: 25px;
+      }
+      
+      .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        height: 100%;
+        min-height: 200px;
+        padding: 20px;
+      }
+      
+      .empty-title {
+        color: white;
+        font-size: 1.1em;
+        font-weight: 600;
+        margin: 0 0 12px 0;
+      }
+      
+      .empty-text {
+        font-style: italic;
+        color: rgba(255, 255, 255, 0.7);
+        line-height: 1.5;
+        max-width: 280px;
+      }
+
+        /* Ion Icon Styling */
+        ion-icon {
+          vertical-align: middle;
+        }
+        
+        .control-button ion-icon {
+          font-size: 1.2em;
+          margin-right: 8px;
+          vertical-align: middle;
+          flex-shrink: 0;
+        }
+        
+        .control-button.primary ion-icon {
+          color: white;
+          filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+        }
+        
+        .control-button.secondary ion-icon {
+          color: white;
+          filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+        }
+        
+        .control-button:disabled ion-icon {
+          color: #718096;
+          filter: none;
+        }
+        
+        .lstm-panel h3 ion-icon {
+          font-size: 1.3em;
+          margin-right: 10px;
+          color: white;
+          vertical-align: middle;
+          filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+        }
+        
+        .input-group label ion-icon {
+          font-size: 1.1em;
+          margin-right: 8px;
+          color: #f7fafc;
+          vertical-align: middle;
+          filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+        }
+        
+        .empty-icon {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 16px;
+        }
+        
+        .empty-icon ion-icon {
+          font-size: 4rem;
+          color: #e2e8f0;
+          display: block;
+          filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+        }
+        
+        /* LSTM SVG Icon Styling */
+        .icon-lstm {
+          width: 20px;
+          height: 20px;
+          display: inline-block;
+          vertical-align: middle;
+          margin-right: 8px;
+          flex-shrink: 0;
+        }
+        
+        .icon-lstm-header {
+          width: 24px;
+          height: 24px;
+          display: inline-block;
+          vertical-align: middle;
+          margin-right: 10px;
+          flex-shrink: 0;
+        }
+
+        /* default: tampilkan LSTM icon, sembunyikan close */
+        .toggle-icon-close {
+          display: none;
+          font-size: 1.2em;
+          margin-right: 6px;
+        }
+
+        .toggle-icon-lstm {
+          display: inline-block;
+        }
+
+        #toggleLSTMPanel.open .toggle-icon-lstm {
+          display: none;
+        }
+
+        #toggleLSTMPanel.open .toggle-icon-close {
+          display: inline-block;
+        }
+
+        #toggleLSTMPanel.open .toggle-label {
+          content: "Tutup Panel";
+        }
+
+        
+        .icon-lstm-large {
+          width: 64px;
+          height: 64px;
+          display: block;
+          margin: 0 auto;
+        }
+        
+        /* Tailwind-like utilities untuk icon */
+        .brightness-0 {
+          filter: brightness(0);
+        }
+        
+        .invert {
+          filter: brightness(0) invert(1);
+        }
+        
+        /* Kombinasi untuk icon putih */
+        .brightness-0.invert {
+          filter: brightness(0) invert(1) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+        }
     </style>
   </main>
 </BaseLayout>

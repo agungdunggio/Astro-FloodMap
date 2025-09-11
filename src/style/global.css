@@ -36,6 +36,13 @@ html, body {
   gap: 6px; /* jarak antara ikon & teks */
 }
 
+.control-button--floating {
+  position:absolute;
+  top:15px;
+  left:15px;
+  z-index:1000;
+}
+
 .control-button ion-icon {
   font-size: 18px;
   vertical-align: middle;
