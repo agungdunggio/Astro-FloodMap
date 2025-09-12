@@ -4,7 +4,7 @@
  * API client untuk LSTM prediction service
  */
 
-const LSTM_API_BASE_URL = 'http://127.0.0.1:8000';
+const LSTM_API_BASE_URL = import.meta.env.PUBLIC_LSTM_URL_API || 'http://127.0.0.1:8000';
 
 /**
  * Fetch LSTM prediction data
@@ -12,7 +12,7 @@ const LSTM_API_BASE_URL = 'http://127.0.0.1:8000';
  * @returns {Promise<Object>} Prediction data
  */
 export async function fetchLSTMPrediction(nDays = 7) {
-  const response = await fetch(`${LSTM_API_BASE_URL}/api/v1/predict`, {
+  const response = await fetch(`${LSTM_API_BASE_URL}/predict`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

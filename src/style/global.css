@@ -10,10 +10,6 @@ html, body {
 
 /* Style untuk tombol kontrol yang lebih menarik */
 .control-button {
-  position: absolute;
-  top: 15px;
-  left: 15px;
-  z-index: 1000;
   background: linear-gradient(135deg, rgba(30, 144, 255, 0.9), rgba(0, 123, 255, 0.9));
   color: #ffffff;
   border: 1px solid rgba(255, 255, 255, 0.2);
