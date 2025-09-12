@@ -5,7 +5,6 @@
  */
 
 // Load Chart.js dari CDN dengan optimasi
-let chartLibraryLoaded = false;
 let chartInstance = null;
 let tooltipEl = null;
 
@@ -22,10 +21,14 @@ function debounce(func, wait) {
   };
 }
 
+let chartLibraryPromise = null;
+let chartLibraryLoaded = false;
+
 async function loadChartLibrary() {
-  if (chartLibraryLoaded) return;
-  
-  return new Promise((resolve, reject) => {
+  if (chartLibraryLoaded) return Promise.resolve();
+  if (chartLibraryPromise) return chartLibraryPromise; // kalau sudah ada yang jalan, pakai yang sama
+
+  chartLibraryPromise = new Promise((resolve, reject) => {
     const script = document.createElement('script');
     script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js';
     script.onload = () => {
@@ -35,7 +38,10 @@ async function loadChartLibrary() {
     script.onerror = reject;
     document.head.appendChild(script);
   });
+
+  return chartLibraryPromise;
 }
+
 
 // Cleanup function untuk memory management
 function cleanupChart() {
