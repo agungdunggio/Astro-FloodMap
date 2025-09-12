@@ -12,6 +12,6 @@ export {
 } from './core/cesiumInitializer.js';
 
 /**
- * Helper function untuk halaman Prediksi LSTM
- * @returns {Promise<Cesium.Viewer|null>}
+ * Helper functions untuk halaman-halaman khusus bisa ditambahkan di sini jika diperlukan
+ * Saat ini semua initialization sudah ditangani oleh cesiumInitializer.js
  */
