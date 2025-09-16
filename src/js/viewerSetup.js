@@ -1,9 +1,9 @@
 // src/js/viewerSetup.js
 import * as Cesium from 'cesium';
-import { cesiumAccessToken, targetLocation } from "./cesiumConfig.js";
+import { cesiumAccessToken, targetLocation, cesiumTerrainAssetId } from "./cesiumConfig.js";
 
 export async function createViewer() {
-  if (cesiumAccessToken === !cesiumAccessToken) {
+  if (!cesiumAccessToken) {
     console.warn("PERHATIAN: Cesium Ion Access Token belum diatur di cesiumConfig.js. Beberapa fitur mungkin tidak berfungsi.");
     // Anda bisa menampilkan pesan ini di UI juga jika mau
   }
@@ -39,5 +39,18 @@ export async function createViewer() {
     window.location.href = '/#technologies'; // Navigate to home page
   });
 
+  try {
+    if (!cesiumAccessToken) {
+      throw new Error("Cesium Ion Access Token is missing. Cannot load terrain.");
+    }
+    viewer.scene.setTerrain(
+      new Cesium.Terrain(
+        Cesium.CesiumTerrainProvider.fromIonAssetId(cesiumTerrainAssetId),
+      ),
+    );
+  } catch (error) {
+    console.error("Gagal memuat terrain Cesium Ion:", error);
+  }
+  
   return viewer;
 }
