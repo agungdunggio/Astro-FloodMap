@@ -1,6 +1,6 @@
 // src/js/viewerSetup.js
 import * as Cesium from 'cesium';
-import { cesiumAccessToken, targetLocation } from "./cesiumConfig.js";
+import { cesiumAccessToken, targetLocation, cesiumTerrainAssetId } from "./cesiumConfig.js";
 
 export async function createViewer() {
   if (!cesiumAccessToken) {
@@ -9,9 +9,14 @@ export async function createViewer() {
   }
   Cesium.Ion.defaultAccessToken = cesiumAccessToken;
 
+  const terrainProvider = await Cesium.CesiumTerrainProvider.fromIonAssetId(cesiumTerrainAssetId);
+
   const viewer = new Cesium.Viewer("cesiumContainer", {
     shouldAnimate: true,
-    terrain: Cesium.Terrain.fromWorldTerrain({ requestWaterMask: true }),
+    terrain: new Cesium.Terrain({
+      provider: terrainProvider,
+      requestWaterMask: true,
+    }),
     timeline: true,
     animation: true,
     geocoder: false,
@@ -38,12 +43,6 @@ export async function createViewer() {
     e.cancel = true; // Cancel default home behavior
     window.location.href = '/#technologies'; // Navigate to home page
   });
-
-  viewer.scene.setTerrain(
-    new Cesium.Terrain(
-      Cesium.CesiumTerrainProvider.fromIonAssetId(3741515),
-    ),
-  );
   
   return viewer;
 }
