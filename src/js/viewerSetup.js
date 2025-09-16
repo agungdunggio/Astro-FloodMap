@@ -9,14 +9,9 @@ export async function createViewer() {
   }
   Cesium.Ion.defaultAccessToken = cesiumAccessToken;
 
-  const terrainProvider = await Cesium.CesiumTerrainProvider.fromIonAssetId(cesiumTerrainAssetId);
-
   const viewer = new Cesium.Viewer("cesiumContainer", {
     shouldAnimate: true,
-    terrain: new Cesium.Terrain({
-      provider: terrainProvider,
-      requestWaterMask: true,
-    }),
+    terrain: Cesium.Terrain.fromWorldTerrain({ requestWaterMask: true }),
     timeline: true,
     animation: true,
     geocoder: false,
@@ -43,6 +38,19 @@ export async function createViewer() {
     e.cancel = true; // Cancel default home behavior
     window.location.href = '/#technologies'; // Navigate to home page
   });
+
+  try {
+    if (!cesiumAccessToken) {
+      throw new Error("Cesium Ion Access Token is missing. Cannot load terrain.");
+    }
+    viewer.scene.setTerrain(
+      new Cesium.Terrain(
+        Cesium.CesiumTerrainProvider.fromIonAssetId(cesiumTerrainAssetId),
+      ),
+    );
+  } catch (error) {
+    console.error("Gagal memuat terrain Cesium Ion:", error);
+  }
   
   return viewer;
 }
