@@ -4,10 +4,11 @@ import 'cesium/Build/Cesium/Widgets/widgets.css';
 import { formatJulianDateToWITA, formatJulianTimeToWITA, formatJulianDateToShortWITAForTimeline } from '../Cesium/formatToWita.js';
 
 import { createViewer } from '../viewerSetup.js';
-import { loadWaterLevelGeoJson, loadAdminBoundaryGeoJson, addLabels } from '../dataLoader.js';
+import { loadWaterLevelGeoJson, loadAdminBoundaryGeoJson, addLabels, switchAdminLayer } from '../dataLoader.js';
 import { initializeSimulationClockEvents } from '../simulationManager.js';
 import { initializeUIControls } from '../uiControl/uiControls.js';
 import { initializePetaDasarPageUI } from '../uiControl/petaDasarUiControls.js';
+import { initializeLayerControls } from '../uiControl/layerControls.js';
 
 import { PAGE_CONFIGS, LAYER_LOADERS } from '../config/pageConfigs.js';
 
@@ -59,9 +60,13 @@ async function loadDataLayers(viewer, dataLayers) {
  * @param {Cesium.Viewer} viewer 
  * @param {Object} features 
  */
-function initializeFeatures(viewer, features) {
+async function initializeFeatures(viewer, features) {
   if (features.labels) {
-    addLabels(viewer);
+    await addLabels(viewer);
+  }
+
+  if (features.layerControls) {
+    initializeLayerControls(viewer);
   }
 
   if (features.clockEvents) {
@@ -115,7 +120,7 @@ export async function initializeCesiumPage(pageType) {
     configureTimeFormatting(viewer);
 
     // 4. Inisialisasi fitur-fitur
-    initializeFeatures(viewer, config.features);
+    await initializeFeatures(viewer, config.features);
 
     // 5. Log success message
     console.log(config.logMessage);
