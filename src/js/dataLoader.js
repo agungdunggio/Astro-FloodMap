@@ -2,7 +2,7 @@
 import * as Cesium from 'cesium';
 
 export let waterLevelEntities = [];
-export const startHeight = 63; // Ketinggian awal air dari ground level (0 meter)
+export const startHeight = 63; 
 
 /**
  * Mendapatkan data historis dari entities yang sudah di-load

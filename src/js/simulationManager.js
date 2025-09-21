@@ -223,14 +223,9 @@ export function startFloodSimulation(viewer, rainMm, durationHours, kecamatanNam
     removeRainEffect(viewer.scene); // Bersihkan efek lama dulu
     addRainEffect(viewer.scene);    // Mulai efek hujan baru
   }
-
-  // Optimasi: Pasang CallbackProperty dengan caching untuk performa yang lebih baik
-  const cachedHeight = { value: 0 }; // Mulai dari ground level
   
   waterLevelEntities.forEach(entity => {
     if (entity.polygon) {
-      entity.polygon.extrudedHeight = startHeight;
-
       entity.polygon.heightReference = Cesium.HeightReference.NONE;
       entity.polygon.extrudedHeightReference = Cesium.HeightReference.NONE;
 
