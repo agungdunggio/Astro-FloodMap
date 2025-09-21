@@ -2,7 +2,7 @@
 import * as Cesium from 'cesium';
 
 export let waterLevelEntities = [];
-export const startHeight = 63; 
+export const startHeight = -5;
 
 /**
  * Mendapatkan data historis dari entities yang sudah di-load
@@ -100,10 +100,11 @@ export async function loadWaterLevelGeoJson(viewer, geoJsonUrl) {
         entity.polygon.material = Cesium.Color.fromCssColorString("#00BFFF").withAlpha(0.7);
         entity.polygon.outline = false; // Hapus outline
         entity.polygon.height = startHeight;                  // top = -50 m
+        entity.polygon.height = startHeight;
         entity.polygon.extrudedHeight = startHeight;
-        entity.polygon.perPositionHeight = false;
-        entity.polygon.heightReference = Cesium.HeightReference.NONE;
-        entity.polygon.extrudedHeightReference = Cesium.HeightReference.NONE;
+        entity.polygon.heightReference = Cesium.HeightReference.RELATIVE_TO_GROUND;
+        entity.polygon.extrudedHeightReference = Cesium.HeightReference.RELATIVE_TO_GROUND;
+        
         
         // Optimasi tambahan untuk performa
         entity.polygon.classificationType = Cesium.ClassificationType.TERRAIN;
@@ -292,16 +293,29 @@ export async function addLabels(viewer, labelJsonUrl = '/data/geojson/administra
  */
 export function resetWaterLevelToStatic() {
   waterLevelEntities.forEach((entity) => {
-    if (Cesium.defined(entity.polygon)) {
-      entity.polygon.height = startHeight;
-      entity.polygon.extrudedHeight = startHeight;
+    if (!Cesium.defined(entity?.polygon)) return;
+
+    const name = entity.historicalData?.kecamatan || '';
+    const cfg  = SPECIAL_AREAS?.[name];
+
+    if (cfg && cfg.mode === 'absolute') {
+      const startAbs = (typeof cfg.startAbs === 'number') ? cfg.startAbs : startHeight;
       entity.polygon.heightReference = Cesium.HeightReference.NONE;
       entity.polygon.extrudedHeightReference = Cesium.HeightReference.NONE;
-      entity.polygon.material = Cesium.Color.fromCssColorString("#00BFFF").withAlpha(0.7);
+      entity.polygon.extrudedHeight = startAbs;
+      entity.polygon.height = startAbs;
+    } else {
+      entity.polygon.heightReference = Cesium.HeightReference.RELATIVE_TO_GROUND;
+      entity.polygon.extrudedHeightReference = Cesium.HeightReference.RELATIVE_TO_GROUND;
+      entity.polygon.extrudedHeight = startHeight;
+      entity.polygon.height = startHeight;
     }
+
+    entity.polygon.material = Cesium.Color.fromCssColorString("#00BFFF").withAlpha(0.7);
   });
-  console.log(`Water level direset ke ground level: 0m`);
+  console.log('Water level direset sesuai mode: absolute=ke startAbs, relative=0 depth');
 }
+
 
 /**
  * Clean up all layer data to prevent memory leaks

@@ -15,6 +15,20 @@ let waterAnimationEndHeight = 29;   // Ketinggian akhir air
 let waterAnimationRiseRate = 0;     // Laju kenaikan (meter per detik)
 let waterAnimationDurationSeconds = 0;
 
+// Kecamatan dengan pengaturan khusus
+// mode: 'relative' | 'absolute'
+// baseOffset: offset tambahan (m) saat relative
+// startAbs: dasar absolut (m) saat absolute
+// maxDepth: batasi ketebalan maksimum (m)
+const SPECIAL_AREAS = {
+  'Hulonthalangi': { mode: 'absolute', startAbs: -500, maxDepth: 6 },
+  'Kota Barat':    { mode: 'absolute', startAbs: 18, maxDepth: 5 },
+  'Dumbo Raya':    { mode: 'absolute', startAbs: 22, maxDepth: 7 },
+  // contoh relative dengan offset:
+  // 'Kota Timur':   { mode: 'relative', baseOffset: 0.3, maxDepth: 3 },
+};
+
+
 export function initializeSimulationClockEvents(viewer) {
   viewer.clock.onTick.addEventListener(function(clock) {
     // Logika untuk efek hujan berdasarkan interval
@@ -225,21 +239,58 @@ export function startFloodSimulation(viewer, rainMm, durationHours, kecamatanNam
   }
   
   waterLevelEntities.forEach(entity => {
-    if (entity.polygon) {
-      entity.polygon.heightReference = Cesium.HeightReference.NONE;
-      entity.polygon.extrudedHeightReference = Cesium.HeightReference.NONE;
-
-      entity.polygon.extrudedHeight = new Cesium.CallbackProperty(function (time) {
-        if (!isAnimatingWater || !waterAnimationStartTime) return startHeight;
-        
+    if (!entity?.polygon) return;
+  
+    const name = entity.historicalData?.kecamatan || '';
+    const cfg  = SPECIAL_AREAS[name];
+  
+    // Total kenaikan (depth) dari hasil perhitunganmu
+    const maxDepthGlobal = waterAnimationEndHeight - waterAnimationStartHeight;
+  
+    if (cfg && cfg.mode === 'absolute') {
+      // === ABSOLUTE MODE ===
+      const startAbs = (typeof cfg.startAbs === 'number') ? cfg.startAbs : startHeight;
+  
+      applyWaterModeDefaults(entity, 'absolute');
+  
+      // Dasar kolom air tetap absolut
+      entity.polygon.extrudedHeight = startAbs;
+  
+      // Permukaan air yang naik (ANIMASI HEIGHT, bukan extrudedHeight)
+      entity.polygon.height = new Cesium.CallbackProperty((time) => {
+        if (!isAnimatingWater || !waterAnimationStartTime) return startAbs;
+  
         const elapsedSec = Cesium.JulianDate.secondsDifference(time, waterAnimationStartTime);
-        let h = waterAnimationStartHeight + elapsedSec * waterAnimationRiseRate;
-        
-        // Batasi tinggi maksimum dan minimum
-        if (h > waterAnimationEndHeight) h = waterAnimationEndHeight;
-        if (h < startHeight) h = startHeight; // Tidak boleh di bawah ground level
-        
-        return h;
+        let depth = elapsedSec * waterAnimationRiseRate; // meter
+  
+        // batas
+        const cap = (typeof cfg.maxDepth === 'number') ? Math.min(cfg.maxDepth, maxDepthGlobal) : maxDepthGlobal;
+        if (depth < 0) depth = 0;
+        if (depth > cap) depth = cap;
+  
+        return startAbs + depth; // top absolut
+      }, false);
+  
+    } else {
+      // === RELATIVE MODE (DEFAULT) ===
+  
+      applyWaterModeDefaults(entity, 'relative');
+  
+      // Dasar menempel terrain
+      entity.polygon.extrudedHeight = startHeight;
+  
+      // Permukaan naik sebagai KETEBALAN (depth)
+      entity.polygon.height = new Cesium.CallbackProperty((time) => {
+        if (!isAnimatingWater || !waterAnimationStartTime) return startHeight;
+  
+        const elapsedSec = Cesium.JulianDate.secondsDifference(time, waterAnimationStartTime);
+        let depth = elapsedSec * waterAnimationRiseRate;
+  
+        const cap = (cfg && typeof cfg.maxDepth === 'number') ? Math.min(cfg.maxDepth, maxDepthGlobal) : maxDepthGlobal;
+        if (depth < 0) depth = 0;
+        if (depth > cap) depth = cap;
+  
+        return startHeight + depth; // top relatif: terrain + (offset + depth)
       }, false);
     }
   });
@@ -298,4 +349,13 @@ export function stopFloodSimulation(viewer) {
   console.log("Simulasi banjir dihentikan dan air direset ke ketinggian awal.");
 }
 
-// Fungsi animasi air sudah diimplementasikan di atas dengan startFloodSimulation() dan stopFloodSimulation()
+function applyWaterModeDefaults(entity, mode) {
+  if (!entity?.polygon) return;
+  if (mode === 'absolute') {
+    entity.polygon.heightReference = Cesium.HeightReference.NONE;
+    entity.polygon.extrudedHeightReference = Cesium.HeightReference.NONE;
+  } else {
+    entity.polygon.heightReference = Cesium.HeightReference.RELATIVE_TO_GROUND;
+    entity.polygon.extrudedHeightReference = Cesium.HeightReference.RELATIVE_TO_GROUND;
+  }
+}
