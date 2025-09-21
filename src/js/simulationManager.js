@@ -193,7 +193,7 @@ export function startFloodSimulation(viewer, rainMm, durationHours, kecamatanNam
     const calculation = calculateFloodRise(rainMm, durationHours, kecamatanName);
     
     // Set variabel animasi - mulai dari ground level (0 meter)
-    waterAnimationStartHeight = 0; // Mulai dari ground level
+    waterAnimationStartHeight = startHeight; // Mulai dari ground level
     waterAnimationEndHeight = waterAnimationStartHeight + calculation.totalRise;
     waterAnimationDurationSeconds = durationHours * 3600;
     waterAnimationRiseRate = calculation.newRiseRate;
@@ -229,20 +229,21 @@ export function startFloodSimulation(viewer, rainMm, durationHours, kecamatanNam
   
   waterLevelEntities.forEach(entity => {
     if (entity.polygon) {
+      entity.polygon.extrudedHeight = startHeight;
+
+      entity.polygon.heightReference = Cesium.HeightReference.NONE;
+      entity.polygon.extrudedHeightReference = Cesium.HeightReference.NONE;
+
       entity.polygon.extrudedHeight = new Cesium.CallbackProperty(function (time) {
-        if (!isAnimatingWater || !waterAnimationStartTime) {
-          return 0; // Kembali ke ground level jika tidak animasi
-        }
+        if (!isAnimatingWater || !waterAnimationStartTime) return startHeight;
         
         const elapsedSec = Cesium.JulianDate.secondsDifference(time, waterAnimationStartTime);
         let h = waterAnimationStartHeight + elapsedSec * waterAnimationRiseRate;
         
         // Batasi tinggi maksimum dan minimum
         if (h > waterAnimationEndHeight) h = waterAnimationEndHeight;
-        if (h < 0) h = 0; // Tidak boleh di bawah ground level
+        if (h < startHeight) h = startHeight; // Tidak boleh di bawah ground level
         
-        // Cache nilai untuk menghindari perhitungan berulang
-        cachedHeight.value = h;
         return h;
       }, false);
     }

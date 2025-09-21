@@ -2,7 +2,7 @@
 import * as Cesium from 'cesium';
 
 export let waterLevelEntities = [];
-export const startHeight = 0; // Ketinggian awal air dari ground level (0 meter)
+export const startHeight = 63; // Ketinggian awal air dari ground level (0 meter)
 
 /**
  * Mendapatkan data historis dari entities yang sudah di-load
@@ -97,11 +97,11 @@ export async function loadWaterLevelGeoJson(viewer, geoJsonUrl) {
         // Optimasi styling polygon untuk performa yang lebih baik
         entity.polygon.material = Cesium.Color.fromCssColorString("#00BFFF").withAlpha(0.7);
         entity.polygon.outline = false; // Hapus outline
-        entity.polygon.height = 0; // Mulai dari ground level
-        entity.polygon.extrudedHeight = startHeight; // awal
+        entity.polygon.height = startHeight;                  // top = -50 m
+        entity.polygon.extrudedHeight = startHeight;
         entity.polygon.perPositionHeight = false;
-        entity.polygon.heightReference = Cesium.HeightReference.CLAMP_TO_GROUND;
-        entity.polygon.extrudedHeightReference = Cesium.HeightReference.RELATIVE_TO_GROUND;
+        entity.polygon.heightReference = Cesium.HeightReference.NONE;
+        entity.polygon.extrudedHeightReference = Cesium.HeightReference.NONE;
         
         // Optimasi tambahan untuk performa
         entity.polygon.classificationType = Cesium.ClassificationType.TERRAIN;
@@ -184,7 +184,7 @@ export async function loadAdminLayer(viewer, layerType = 'kecamatan') {
 
     // Styling berdasarkan tipe layer
     const color = layerType === 'kecamatan' ? Cesium.Color.ORANGE : Cesium.Color.YELLOW;
-    const width = layerType === 'kecamatan' ? 3.5 : 3;
+    const width = layerType === 'kecamatan' ? 3.5 : 3.5;
 
     dataSource.entities.values.forEach((entity) => {
       if (Cesium.defined(entity.polyline)) {
@@ -291,7 +291,10 @@ export async function addLabels(viewer, labelJsonUrl = '/data/geojson/administra
 export function resetWaterLevelToStatic() {
   waterLevelEntities.forEach((entity) => {
     if (Cesium.defined(entity.polygon)) {
-      entity.polygon.extrudedHeight = 0; // Reset ke ground level
+      entity.polygon.height = startHeight;
+      entity.polygon.extrudedHeight = startHeight;
+      entity.polygon.heightReference = Cesium.HeightReference.NONE;
+      entity.polygon.extrudedHeightReference = Cesium.HeightReference.NONE;
       entity.polygon.material = Cesium.Color.fromCssColorString("#00BFFF").withAlpha(0.7);
     }
   });
