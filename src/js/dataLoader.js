@@ -2,7 +2,21 @@
 import * as Cesium from 'cesium';
 
 export let waterLevelEntities = [];
-export const startHeight = -5;
+// export const startHeight = -5;
+
+export const KECAMATAN_BASE_HEIGHTS = {
+  'Hulonthalangi': 62.5, // need accuracy 62-64 |62.5|
+  'Dumbo Raya': 62.5, // need accuracy 62-63 |62.5|
+  'Kota Selatan': 64.2, // need accuracy 64-64.5 |64.2|
+  'Kota Barat': 64, // need accuracy 64-65 |64|
+  'Dungingi': 64.1, // need accuracy 64-65 |64.1|
+  'Kota Tengah': 67.5, // need accuracy 67-68 |67.5|
+  'Kota Timur': 64.5, // need accuracy 64-64.5 |64.5|
+  'Kota Utara': 66.7, // need accuracy 66.5-6.8
+  'Sipatana': 72.3, // need accuracy 72-72.5 |72.3|
+  // Tambahkan kecamatan lain jika perlu
+  'default': 0 // Nilai default jika kecamatan tidak ditemukan
+};
 
 /**
  * Mendapatkan data historis dari entities yang sudah di-load
@@ -82,6 +96,7 @@ export async function loadWaterLevelGeoJson(viewer, geoJsonUrl) {
         const kecamatanName = entity.properties?.WADMKC?.getValue() || 'Unknown';
         const precipitation = parseFloat(import.meta.env.PUBLIC_PRECIPITATION) || 0;
         const duration = parseFloat(import.meta.env.PUBLIC_DURATION) || 0;
+        const baseHeight = KECAMATAN_BASE_HEIGHTS[kecamatanName] || KECAMATAN_BASE_HEIGHTS.default;
 
         // Simpan data historis di entity untuk digunakan di simulationManager
         entity.historicalData = {
@@ -90,6 +105,7 @@ export async function loadWaterLevelGeoJson(viewer, geoJsonUrl) {
           riseRate: riseRate_cmps, // cm/s
           precipitation: precipitation,
           duration: duration,
+          baseHeight: baseHeight,
         };
 
         // Konversi ke meter untuk internal use
@@ -98,12 +114,11 @@ export async function loadWaterLevelGeoJson(viewer, geoJsonUrl) {
 
         // Optimasi styling polygon untuk performa yang lebih baik
         entity.polygon.material = Cesium.Color.fromCssColorString("#00BFFF").withAlpha(0.7);
-        entity.polygon.outline = false; // Hapus outline
-        entity.polygon.height = startHeight;                  // top = -50 m
-        entity.polygon.height = startHeight;
-        entity.polygon.extrudedHeight = startHeight;
-        entity.polygon.heightReference = Cesium.HeightReference.RELATIVE_TO_GROUND;
-        entity.polygon.extrudedHeightReference = Cesium.HeightReference.RELATIVE_TO_GROUND;
+        entity.polygon.outline = false; // Hapus outline// top = -50 m
+        entity.polygon.height = baseHeight;
+        entity.polygon.extrudedHeight = baseHeight;
+        entity.polygon.heightReference = Cesium.HeightReference.NONE;
+        entity.polygon.extrudedHeightReference = Cesium.HeightReference.NONE;
         
         
         // Optimasi tambahan untuk performa
@@ -293,28 +308,24 @@ export async function addLabels(viewer, labelJsonUrl = '/data/geojson/administra
  */
 export function resetWaterLevelToStatic() {
   waterLevelEntities.forEach((entity) => {
-    if (!Cesium.defined(entity?.polygon)) return;
+    if (!Cesium.defined(entity?.polygon) || !entity.historicalData) return;
 
-    const name = entity.historicalData?.kecamatan || '';
-    const cfg  = SPECIAL_AREAS?.[name];
+    // Ambil baseHeight yang sudah tersimpan
+    const baseHeight = entity.historicalData.baseHeight;
 
-    if (cfg && cfg.mode === 'absolute') {
-      const startAbs = (typeof cfg.startAbs === 'number') ? cfg.startAbs : startHeight;
-      entity.polygon.heightReference = Cesium.HeightReference.NONE;
-      entity.polygon.extrudedHeightReference = Cesium.HeightReference.NONE;
-      entity.polygon.extrudedHeight = startAbs;
-      entity.polygon.height = startAbs;
-    } else {
-      entity.polygon.heightReference = Cesium.HeightReference.RELATIVE_TO_GROUND;
-      entity.polygon.extrudedHeightReference = Cesium.HeightReference.RELATIVE_TO_GROUND;
-      entity.polygon.extrudedHeight = startHeight;
-      entity.polygon.height = startHeight;
-    }
+    // Set height reference ke NONE
+    entity.polygon.heightReference = Cesium.HeightReference.NONE;
+    entity.polygon.extrudedHeightReference = Cesium.HeightReference.NONE;
+
+    // Reset posisi air ke baseHeight
+    entity.polygon.extrudedHeight = baseHeight;
+    entity.polygon.height = baseHeight;
 
     entity.polygon.material = Cesium.Color.fromCssColorString("#00BFFF").withAlpha(0.7);
   });
-  console.log('Water level direset sesuai mode: absolute=ke startAbs, relative=0 depth');
+  console.log('Water level direset ke base height yang sudah ditentukan.');
 }
+
 
 
 /**

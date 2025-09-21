@@ -1,7 +1,9 @@
 // src/js/simulationManager.js
 import * as Cesium from 'cesium';
-// Impor fungsi efek hujan dan state partikelnya jika perlu dicek di sini
+import { waterLevelEntities, resetWaterLevelToStatic, getHistoricalData, getAvailableKecamatan } from './dataLoader.js';
 import { addRainEffect, removeRainEffect, currentRainParticleSystem as rainSystemFromEffectModule } from './rainEffect.js';
+
+export { getAvailableKecamatan };
 
 // State internal modul ini untuk interval event hujan
 let rainEventStartJulianDate = null;
@@ -10,24 +12,7 @@ let rainEventEndJulianDate = null;
 // Variabel untuk animasi air banjir
 let isAnimatingWater = false;
 let waterAnimationStartTime = null;
-let waterAnimationStartHeight = 29; // Ketinggian awal air
-let waterAnimationEndHeight = 29;   // Ketinggian akhir air
 let waterAnimationRiseRate = 0;     // Laju kenaikan (meter per detik)
-let waterAnimationDurationSeconds = 0;
-
-// Kecamatan dengan pengaturan khusus
-// mode: 'relative' | 'absolute'
-// baseOffset: offset tambahan (m) saat relative
-// startAbs: dasar absolut (m) saat absolute
-// maxDepth: batasi ketebalan maksimum (m)
-const SPECIAL_AREAS = {
-  'Hulonthalangi': { mode: 'absolute', startAbs: -500, maxDepth: 6 },
-  'Kota Barat':    { mode: 'absolute', startAbs: 18, maxDepth: 5 },
-  'Dumbo Raya':    { mode: 'absolute', startAbs: 22, maxDepth: 7 },
-  // contoh relative dengan offset:
-  // 'Kota Timur':   { mode: 'relative', baseOffset: 0.3, maxDepth: 3 },
-};
-
 
 export function initializeSimulationClockEvents(viewer) {
   viewer.clock.onTick.addEventListener(function(clock) {
@@ -38,18 +23,12 @@ export function initializeSimulationClockEvents(viewer) {
                                     Cesium.JulianDate.lessThan(currentTime, rainEventEndJulianDate);
 
       if (isCurrentlyInInterval) {
-        if (!rainSystemFromEffectModule) { // Cek apakah sistem partikel dari modul rainEffect aktif
-            addRainEffect(viewer.scene);
-        }
+        if (!rainSystemFromEffectModule) addRainEffect(viewer.scene);
       } else {
-        if (rainSystemFromEffectModule) {
-            removeRainEffect(viewer.scene);
-        }
+        if (rainSystemFromEffectModule) removeRainEffect(viewer.scene);
       }
     } else {
-      if (rainSystemFromEffectModule) {
-          removeRainEffect(viewer.scene);
-      }
+      if (rainSystemFromEffectModule) removeRainEffect(viewer.scene);
     }
 
     // Logika animasi air banjir
@@ -75,12 +54,6 @@ export function cancelRainEvent(viewer) {
   rainEventEndJulianDate = null;
   console.log("Event hujan dibatalkan.");
 }
-
-// Import waterLevelEntities, startHeight, dan fungsi data dari dataLoader
-import { waterLevelEntities, startHeight, resetWaterLevelToStatic, getHistoricalData, getAvailableKecamatan } from './dataLoader.js';
-
-// Re-export fungsi dari dataLoader untuk kemudahan akses
-export { getAvailableKecamatan };
 
 /**
  * Optimasi performa untuk simulasi
@@ -189,131 +162,75 @@ export function calculateFloodRise(rainMm, durationHours, kecamatanName = null) 
 /**
  * Memulai simulasi banjir dengan animasi kenaikan air
  * @param {Cesium.Viewer} viewer - Cesium viewer
- * @param {number} rainMm - Curah hujan dalam mm
- * @param {number} durationHours - Durasi simulasi dalam jam
+ * @param {number} rainMm - Curah hujan (mm)
+ * @param {number} durationHours - Durasi (jam)
  * @param {string} kecamatanName - Nama kecamatan (opsional)
  * @param {Object} options - Opsi performa (opsional)
  */
 export function startFloodSimulation(viewer, rainMm, durationHours, kecamatanName = null, options = {}) {
-  // Opsi performa default
   const performanceOptions = {
     enableRainEffect: true,
     enableDetailedLogging: false,
     clockMultiplier: 60,
     ...options
   };
+
   try {
-    // Hitung kenaikan air menggunakan rumus baru
     const calculation = calculateFloodRise(rainMm, durationHours, kecamatanName);
-    
-    // Set variabel animasi - mulai dari ground level (0 meter)
-    waterAnimationStartHeight = startHeight; // Mulai dari ground level
-    waterAnimationEndHeight = waterAnimationStartHeight + calculation.totalRise;
-    waterAnimationDurationSeconds = durationHours * 3600;
+    const durationSeconds = durationHours * 3600;
+
     waterAnimationRiseRate = calculation.newRiseRate;
 
-  // Atur jam viewer mulai dari sekarang
-  const now = Cesium.JulianDate.now();
-  viewer.clock.startTime = now.clone();
-  viewer.clock.currentTime = now.clone();
-  viewer.clock.stopTime = Cesium.JulianDate.addSeconds(
-    now,
-    waterAnimationDurationSeconds,
-    new Cesium.JulianDate()
-  );
-    viewer.clock.multiplier = performanceOptions.clockMultiplier; // percepat simulasi
-  viewer.clock.clockRange = Cesium.ClockRange.LOOP_STOP;
+    // Atur jam viewer
+    const now = Cesium.JulianDate.now();
+    viewer.clock.startTime = now.clone();
+    viewer.clock.currentTime = now.clone();
+    viewer.clock.stopTime = Cesium.JulianDate.addSeconds(now, durationSeconds, new Cesium.JulianDate());
+    viewer.clock.multiplier = performanceOptions.clockMultiplier;
+    viewer.clock.clockRange = Cesium.ClockRange.LOOP_STOP;
 
-  // Set waktu mulai animasi dan flag
-  waterAnimationStartTime = now.clone();
-  isAnimatingWater = true;
+    waterAnimationStartTime = now.clone();
+    isAnimatingWater = true;
 
-  // PENTING: Sinkronkan waktu hujan dengan waktu simulasi yang baru
-  rainEventStartJulianDate = Cesium.JulianDate.clone(now);
-  rainEventEndJulianDate = Cesium.JulianDate.addHours(rainEventStartJulianDate, durationHours, new Cesium.JulianDate());
-  
-  // Mulai efek hujan jika diaktifkan
-  if (performanceOptions.enableRainEffect) {
-    removeRainEffect(viewer.scene); // Bersihkan efek lama dulu
-    addRainEffect(viewer.scene);    // Mulai efek hujan baru
-  }
-  
-  waterLevelEntities.forEach(entity => {
-    if (!entity?.polygon) return;
-  
-    const name = entity.historicalData?.kecamatan || '';
-    const cfg  = SPECIAL_AREAS[name];
-  
-    // Total kenaikan (depth) dari hasil perhitunganmu
-    const maxDepthGlobal = waterAnimationEndHeight - waterAnimationStartHeight;
-  
-    if (cfg && cfg.mode === 'absolute') {
-      // === ABSOLUTE MODE ===
-      const startAbs = (typeof cfg.startAbs === 'number') ? cfg.startAbs : startHeight;
-  
-      applyWaterModeDefaults(entity, 'absolute');
-  
-      // Dasar kolom air tetap absolut
-      entity.polygon.extrudedHeight = startAbs;
-  
-      // Permukaan air yang naik (ANIMASI HEIGHT, bukan extrudedHeight)
+    // Sinkronkan waktu hujan dengan simulasi
+    rainEventStartJulianDate = now.clone();
+    rainEventEndJulianDate = Cesium.JulianDate.addHours(rainEventStartJulianDate, durationHours, new Cesium.JulianDate());
+
+    if (performanceOptions.enableRainEffect) {
+      removeRainEffect(viewer.scene);
+      addRainEffect(viewer.scene);
+    }
+
+    // Terapkan animasi ke setiap entitas
+    waterLevelEntities.forEach(entity => {
+      if (!entity?.polygon || !entity.historicalData) return;
+
+      const baseHeight = entity.historicalData.baseHeight;
+      const totalRiseForEntity = calculation.totalRise; // total kenaikan sama untuk semua
+
+      // Dasar air tetap di baseHeight
+      entity.polygon.extrudedHeight = baseHeight;
+
+      // Permukaan air (height) yang akan dianimasikan
       entity.polygon.height = new Cesium.CallbackProperty((time) => {
-        if (!isAnimatingWater || !waterAnimationStartTime) return startAbs;
-  
-        const elapsedSec = Cesium.JulianDate.secondsDifference(time, waterAnimationStartTime);
-        let depth = elapsedSec * waterAnimationRiseRate; // meter
-  
-        // batas
-        const cap = (typeof cfg.maxDepth === 'number') ? Math.min(cfg.maxDepth, maxDepthGlobal) : maxDepthGlobal;
-        if (depth < 0) depth = 0;
-        if (depth > cap) depth = cap;
-  
-        return startAbs + depth; // top absolut
-      }, false);
-  
-    } else {
-      // === RELATIVE MODE (DEFAULT) ===
-  
-      applyWaterModeDefaults(entity, 'relative');
-  
-      // Dasar menempel terrain
-      entity.polygon.extrudedHeight = startHeight;
-  
-      // Permukaan naik sebagai KETEBALAN (depth)
-      entity.polygon.height = new Cesium.CallbackProperty((time) => {
-        if (!isAnimatingWater || !waterAnimationStartTime) return startHeight;
-  
+        if (!isAnimatingWater || !waterAnimationStartTime) return baseHeight;
+
         const elapsedSec = Cesium.JulianDate.secondsDifference(time, waterAnimationStartTime);
         let depth = elapsedSec * waterAnimationRiseRate;
-  
-        const cap = (cfg && typeof cfg.maxDepth === 'number') ? Math.min(cfg.maxDepth, maxDepthGlobal) : maxDepthGlobal;
-        if (depth < 0) depth = 0;
-        if (depth > cap) depth = cap;
-  
-        return startHeight + depth; // top relatif: terrain + (offset + depth)
-      }, false);
-    }
-  });
 
-  viewer.clock.shouldAnimate = true;
-  
-  // Logging detail hanya jika diaktifkan
-  if (performanceOptions.enableDetailedLogging) {
-    console.log('=== SIMULASI BANJIR - PERHITUNGAN BARU ===');
-    console.log(`Kecamatan: ${calculation.historicalData.kecamatan}`);
-    console.log(`Data Historis: H=${calculation.historicalData.height}cm, RRISE=${calculation.historicalData.riseRate}cm/s, P=${calculation.historicalData.precipitation}mm, D=${calculation.historicalData.duration}jam`);
-    console.log(`Input User: P_baru=${rainMm}mm, D_baru=${durationHours}jam`);
-    console.log(`RiseRate historis: ${calculation.historicalRiseRate.toFixed(6)} cm/s`);
-    console.log(`Faktor curah hujan (f): ${calculation.precipitationFactor.toFixed(3)}`);
-    console.log(`RiseRate baru: ${(calculation.newRiseRate * 100).toFixed(6)} cm/s (${calculation.newRiseRate.toFixed(6)} m/s)`);
-    console.log(`Total kenaikan: ${calculation.totalRise.toFixed(2)}m`);
-    console.log(`Ketinggian akhir: ${waterAnimationEndHeight.toFixed(2)}m`);
-    console.log('==========================================');
-  } else {
-    // Logging ringkas untuk performa
-    console.log(`🌊 Simulasi dimulai: ${calculation.historicalData.kecamatan}, Kenaikan: ${calculation.totalRise.toFixed(2)}m`);
-  }
-    
+        // Batasi kedalaman agar tidak melebihi total kenaikan
+        if (depth < 0) depth = 0;
+        if (depth > totalRiseForEntity) depth = totalRiseForEntity;
+
+        return baseHeight + depth; // Ketinggian absolut = dasar + kedalaman
+      }, false);
+    });
+
+    viewer.clock.shouldAnimate = true;
+
+    // Logging
+    console.log(`🌊 Simulasi dimulai: ${calculation.historicalData.kecamatan}, Kenaikan: ${calculation.totalRise.toFixed(2)}m dari base height.`);
+
   } catch (error) {
     console.error('Error dalam simulasi banjir:', error.message);
     throw error;
@@ -327,35 +244,20 @@ export function startFloodSimulation(viewer, rainMm, durationHours, kecamatanNam
 export function stopFloodSimulation(viewer) {
   isAnimatingWater = false;
   waterAnimationStartTime = null;
-  
-  // Reset waktu hujan
   rainEventStartJulianDate = null;
   rainEventEndJulianDate = null;
-  
-  // Hentikan efek hujan
   removeRainEffect(viewer.scene);
-  
-  // Reset clock ke waktu real-time
+
+  // Reset clock ke real-time
   const now = Cesium.JulianDate.now();
   viewer.clock.startTime = now.clone();
   viewer.clock.currentTime = now.clone();
   viewer.clock.stopTime = Cesium.JulianDate.addDays(now, 1, new Cesium.JulianDate());
-  viewer.clock.multiplier = 1.0; // kembali ke kecepatan normal
+  viewer.clock.multiplier = 1.0;
   viewer.clock.clockRange = Cesium.ClockRange.UNBOUNDED;
-  
-  // Reset ketinggian air ke nilai awal menggunakan fungsi dari dataLoader
-  resetWaterLevelToStatic();
-  
-  console.log("Simulasi banjir dihentikan dan air direset ke ketinggian awal.");
-}
 
-function applyWaterModeDefaults(entity, mode) {
-  if (!entity?.polygon) return;
-  if (mode === 'absolute') {
-    entity.polygon.heightReference = Cesium.HeightReference.NONE;
-    entity.polygon.extrudedHeightReference = Cesium.HeightReference.NONE;
-  } else {
-    entity.polygon.heightReference = Cesium.HeightReference.RELATIVE_TO_GROUND;
-    entity.polygon.extrudedHeightReference = Cesium.HeightReference.RELATIVE_TO_GROUND;
-  }
+  // Panggil fungsi reset dari dataLoader
+  resetWaterLevelToStatic();
+
+  console.log("Simulasi banjir dihentikan dan air direset.");
 }
