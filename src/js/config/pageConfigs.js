@@ -8,7 +8,7 @@ export const PAGE_CONFIGS = {
   SIMULATION: {
     name: 'simulasi-banjir',
     dataLayers: [
-      { type: 'waterLevel', path: '/data/geojson/water/waterLevel.json' }
+      { type: 'waterLevel', path: '/data/geojson/water/kecamatan.json' }
     ],
     features: {
       simulation: true,

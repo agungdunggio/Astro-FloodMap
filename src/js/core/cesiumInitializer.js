@@ -4,7 +4,7 @@ import 'cesium/Build/Cesium/Widgets/widgets.css';
 import { formatJulianDateToWITA, formatJulianTimeToWITA, formatJulianDateToShortWITAForTimeline } from '../Cesium/formatToWita.js';
 
 import { createViewer } from '../viewerSetup.js';
-import { loadWaterLevelGeoJson, loadAdminBoundaryGeoJson, addLabels, switchAdminLayer } from '../dataLoader.js';
+import { loadWaterLevelGeoJson, loadAdminBoundaryGeoJson, addLabels } from '../dataLoader.js';
 import { initializeSimulationClockEvents } from '../simulationManager.js';
 import { initializeUIControls } from '../uiControl/uiControls.js';
 import { initializePetaDasarPageUI } from '../uiControl/petaDasarUiControls.js';

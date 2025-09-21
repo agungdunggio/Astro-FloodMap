@@ -2,7 +2,64 @@
 import * as Cesium from 'cesium';
 
 export let waterLevelEntities = [];
-export const startHeight = 29; // Ketinggian awal statis air - di-export untuk digunakan di modul lain
+export const startHeight = 0; // Ketinggian awal air dari ground level (0 meter)
+
+/**
+ * Mendapatkan data historis dari entities yang sudah di-load
+ * @param {string} kecamatanName - Nama kecamatan (opsional)
+ * @returns {Object|null} Data historis
+ */
+export function getHistoricalData(kecamatanName = null) {
+  if (!waterLevelEntities || waterLevelEntities.length === 0) {
+    console.warn('Tidak ada water level entities yang tersedia');
+    return null;
+  }
+
+  // Jika tidak ada nama kecamatan, gunakan yang pertama
+  if (!kecamatanName) {
+    const firstEntity = waterLevelEntities[0];
+    if (firstEntity && firstEntity.historicalData) {
+      return firstEntity.historicalData;
+    }
+  }
+
+  // Cari kecamatan yang sesuai
+  const targetEntity = waterLevelEntities.find(entity => 
+    entity.historicalData && entity.historicalData.kecamatan === kecamatanName
+  );
+
+  if (targetEntity && targetEntity.historicalData) {
+    return targetEntity.historicalData;
+  }
+
+  // Fallback ke yang pertama
+  const firstEntity = waterLevelEntities[0];
+  if (firstEntity && firstEntity.historicalData) {
+    console.warn(`Kecamatan ${kecamatanName} tidak ditemukan, menggunakan ${firstEntity.historicalData.kecamatan}`);
+    return firstEntity.historicalData;
+  }
+
+  return null;
+}
+
+/**
+ * Mendapatkan daftar kecamatan yang tersedia
+ * @returns {Array} Daftar kecamatan
+ */
+export function getAvailableKecamatan() {
+  if (!waterLevelEntities || waterLevelEntities.length === 0) {
+    return [];
+  }
+
+  return waterLevelEntities
+    .filter(entity => entity.historicalData)
+    .map(entity => ({
+      name: entity.historicalData.kecamatan,
+      trise: entity.historicalData.height,
+      rrise: entity.historicalData.riseRate,
+      entity: entity
+    }));
+}
 
 // Layer management
 export let currentAdminLayer = null;
@@ -15,19 +72,51 @@ export async function loadWaterLevelGeoJson(viewer, geoJsonUrl) {
     viewer.dataSources.add(dataSource);
     waterLevelEntities = dataSource.entities.values; // Update variabel global/module
 
+    console.log(`📊 Loaded ${waterLevelEntities.length} water level entities from ${geoJsonUrl}`);
+
     waterLevelEntities.forEach((entity) => {
       if (Cesium.defined(entity.polygon)) {
+        // Ambil properti TRISE (cm) dan RRISE (cm/s) dari kecamatan.json
+        const totalRise_cm = entity.properties?.TRISE?.getValue() || 0;
+        const riseRate_cmps = entity.properties?.RRISE?.getValue() || 0;
+        const kecamatanName = entity.properties?.WADMKC?.getValue() || 'Unknown';
+
+        // Simpan data historis di entity untuk digunakan di simulationManager
+        entity.historicalData = {
+          kecamatan: kecamatanName,
+          height: totalRise_cm, // cm
+          riseRate: riseRate_cmps, // cm/s
+          precipitation: 54.4, // mm (dari contoh)
+          duration: 10 // jam (dari contoh)
+        };
+
+        // Konversi ke meter untuk internal use
+        entity.totalRise_m = totalRise_cm / 100.0;
+        entity.riseRate_mps = riseRate_cmps / 100.0; // cm/s ke m/s
+
+        // Optimasi styling polygon untuk performa yang lebih baik
         entity.polygon.material = Cesium.Color.fromCssColorString("#00BFFF").withAlpha(0.7);
-        entity.polygon.outline = true;
-        entity.polygon.outlineColor = Cesium.Color.BLUE;
-        entity.polygon.outlineWidth = 2;
-        entity.polygon.height = 0;
-        entity.polygon.extrudedHeight = startHeight;
+        entity.polygon.outline = false; // Hapus outline
+        entity.polygon.height = 0; // Mulai dari ground level
+        entity.polygon.extrudedHeight = startHeight; // awal
         entity.polygon.perPositionHeight = false;
         entity.polygon.heightReference = Cesium.HeightReference.CLAMP_TO_GROUND;
         entity.polygon.extrudedHeightReference = Cesium.HeightReference.RELATIVE_TO_GROUND;
+        
+        // Optimasi tambahan untuk performa
+        entity.polygon.classificationType = Cesium.ClassificationType.TERRAIN;
+        entity.polygon.show = true;
       }
     });
+
+    // Log summary saja untuk menghindari spam console
+    if (waterLevelEntities.length > 0) {
+      const firstEntity = waterLevelEntities[0];
+      if (firstEntity.historicalData) {
+        console.log(`📋 Data historis siap: ${waterLevelEntities.length} kecamatan loaded`);
+      }
+    }
+
   } catch (error) {
     console.error("Gagal memuat Water Level GeoJSON:", error);
   }
@@ -202,11 +291,11 @@ export async function addLabels(viewer, labelJsonUrl = '/data/geojson/administra
 export function resetWaterLevelToStatic() {
   waterLevelEntities.forEach((entity) => {
     if (Cesium.defined(entity.polygon)) {
-      entity.polygon.extrudedHeight = startHeight;
+      entity.polygon.extrudedHeight = 0; // Reset ke ground level
       entity.polygon.material = Cesium.Color.fromCssColorString("#00BFFF").withAlpha(0.7);
     }
   });
-  console.log(`Water level direset ke ketinggian statis: ${startHeight}m`);
+  console.log(`Water level direset ke ground level: 0m`);
 }
 
 /**
