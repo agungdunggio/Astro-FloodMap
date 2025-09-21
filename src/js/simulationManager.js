@@ -62,25 +62,141 @@ export function cancelRainEvent(viewer) {
   console.log("Event hujan dibatalkan.");
 }
 
-// Import waterLevelEntities dan startHeight dari dataLoader
-import { waterLevelEntities, startHeight, resetWaterLevelToStatic } from './dataLoader.js';
+// Import waterLevelEntities, startHeight, dan fungsi data dari dataLoader
+import { waterLevelEntities, startHeight, resetWaterLevelToStatic, getHistoricalData, getAvailableKecamatan } from './dataLoader.js';
+
+// Re-export fungsi dari dataLoader untuk kemudahan akses
+export { getAvailableKecamatan };
+
+/**
+ * Optimasi performa untuk simulasi
+ * @param {Cesium.Viewer} viewer - Cesium viewer
+ * @param {Object} options - Opsi optimasi
+ */
+export function optimizeSimulationPerformance(viewer, options = {}) {
+  const defaultOptions = {
+    reducePolygonComplexity: true,
+    disableShadows: true,
+    reduceTerrainQuality: true,
+    limitFrameRate: 30
+  };
+  
+  const opts = { ...defaultOptions, ...options };
+  
+  // Optimasi scene
+  if (opts.disableShadows) {
+    viewer.shadows = false;
+  }
+  
+  // Optimasi terrain
+  if (opts.reduceTerrainQuality) {
+    viewer.terrainProvider = new Cesium.EllipsoidTerrainProvider();
+  }
+  
+  // Limit frame rate
+  if (opts.limitFrameRate) {
+    viewer.targetFrameRate = opts.limitFrameRate;
+  }
+  
+  // Optimasi rendering
+  viewer.scene.globe.enableLighting = false;
+  viewer.scene.globe.dynamicAtmosphereLighting = false;
+  
+  console.log('⚡ Optimasi performa simulasi diterapkan');
+}
+
+/**
+ * Simulasi banjir dengan performa tinggi (tanpa efek hujan dan logging minimal)
+ * @param {Cesium.Viewer} viewer - Cesium viewer
+ * @param {number} rainMm - Curah hujan dalam mm
+ * @param {number} durationHours - Durasi simulasi dalam jam
+ * @param {string} kecamatanName - Nama kecamatan (opsional)
+ */
+export function startHighPerformanceFloodSimulation(viewer, rainMm, durationHours, kecamatanName = null) {
+  const performanceOptions = {
+    enableRainEffect: false,        // Matikan efek hujan
+    enableDetailedLogging: false,   // Matikan logging detail
+    clockMultiplier: 120,          // Percepat lebih tinggi
+  };
+  
+  // Terapkan optimasi performa
+  optimizeSimulationPerformance(viewer, {
+    disableShadows: true,
+    reduceTerrainQuality: true,
+    limitFrameRate: 30
+  });
+  
+  // Jalankan simulasi dengan opsi performa
+  return startFloodSimulation(viewer, rainMm, durationHours, kecamatanName, performanceOptions);
+}
+
+/**
+ * Menghitung kenaikan air berdasarkan rumus baru
+ * @param {number} rainMm - Curah hujan dalam mm
+ * @param {number} durationHours - Durasi dalam jam
+ * @param {string} kecamatanName - Nama kecamatan (opsional)
+ * @returns {Object} Hasil perhitungan
+ */
+export function calculateFloodRise(rainMm, durationHours, kecamatanName = null) {
+  // Ambil data historis dari entities yang sudah di-load
+  const historicalData = getHistoricalData(kecamatanName);
+  
+  if (!historicalData) {
+    throw new Error('Data historis tidak tersedia. Pastikan data kecamatan sudah di-load.');
+  }
+  
+  // Validasi input
+  if (rainMm <= 0 || durationHours <= 0) {
+    throw new Error('Curah hujan dan durasi harus lebih dari 0');
+  }
+  
+  // Gunakan RRISE langsung dari data historis (sudah dalam cm/s)
+  const historicalRiseRateCmPerSec = historicalData.riseRate;
+  
+  // Hitung faktor perbandingan dengan data historis
+  const precipitationFactor = rainMm / historicalData.precipitation;
+  
+  // Hitung RiseRate baru berdasarkan faktor
+  const newRiseRateCmPerSec = historicalRiseRateCmPerSec * precipitationFactor;
+  
+  // Konversi ke meter dan hitung total kenaikan
+  const newRiseRateMPerSec = newRiseRateCmPerSec / 100; // cm ke m
+  const totalRise = newRiseRateMPerSec * (durationHours * 3600);
+  
+  return {
+    historicalRiseRate: historicalRiseRateCmPerSec,
+    precipitationFactor: precipitationFactor,
+    newRiseRate: newRiseRateMPerSec,
+    totalRise: totalRise,
+    historicalData: historicalData
+  };
+}
 
 /**
  * Memulai simulasi banjir dengan animasi kenaikan air
  * @param {Cesium.Viewer} viewer - Cesium viewer
  * @param {number} rainMm - Curah hujan dalam mm
  * @param {number} durationHours - Durasi simulasi dalam jam
+ * @param {string} kecamatanName - Nama kecamatan (opsional)
+ * @param {Object} options - Opsi performa (opsional)
  */
-export function startFloodSimulation(viewer, rainMm, durationHours) {
-  // Konversi curah hujan ke kenaikan air
-  const risePerMm = 0.1; // contoh: 1 mm = 0.1 m
-  const totalRise = rainMm * risePerMm;
-  
-  // Set variabel animasi
-  waterAnimationStartHeight = startHeight; // Ketinggian awal dari dataLoader
-  waterAnimationEndHeight = waterAnimationStartHeight + totalRise;
-  waterAnimationDurationSeconds = durationHours * 3600;
-  waterAnimationRiseRate = totalRise / waterAnimationDurationSeconds;
+export function startFloodSimulation(viewer, rainMm, durationHours, kecamatanName = null, options = {}) {
+  // Opsi performa default
+  const performanceOptions = {
+    enableRainEffect: true,
+    enableDetailedLogging: false,
+    clockMultiplier: 60,
+    ...options
+  };
+  try {
+    // Hitung kenaikan air menggunakan rumus baru
+    const calculation = calculateFloodRise(rainMm, durationHours, kecamatanName);
+    
+    // Set variabel animasi - mulai dari ground level (0 meter)
+    waterAnimationStartHeight = startHeight; // Mulai dari ground level
+    waterAnimationEndHeight = waterAnimationStartHeight + calculation.totalRise;
+    waterAnimationDurationSeconds = durationHours * 3600;
+    waterAnimationRiseRate = calculation.newRiseRate;
 
   // Atur jam viewer mulai dari sekarang
   const now = Cesium.JulianDate.now();
@@ -91,7 +207,7 @@ export function startFloodSimulation(viewer, rainMm, durationHours) {
     waterAnimationDurationSeconds,
     new Cesium.JulianDate()
   );
-  viewer.clock.multiplier = 60; // percepat simulasi
+    viewer.clock.multiplier = performanceOptions.clockMultiplier; // percepat simulasi
   viewer.clock.clockRange = Cesium.ClockRange.LOOP_STOP;
 
   // Set waktu mulai animasi dan flag
@@ -102,24 +218,26 @@ export function startFloodSimulation(viewer, rainMm, durationHours) {
   rainEventStartJulianDate = Cesium.JulianDate.clone(now);
   rainEventEndJulianDate = Cesium.JulianDate.addHours(rainEventStartJulianDate, durationHours, new Cesium.JulianDate());
   
-  // Mulai efek hujan segera karena kita sudah dalam interval waktu hujan
-  removeRainEffect(viewer.scene); // Bersihkan efek lama dulu
-  addRainEffect(viewer.scene);    // Mulai efek hujan baru
-
-  // Pasang CallbackProperty untuk extrudedHeight pada semua entitas air
+  // Mulai efek hujan jika diaktifkan
+  if (performanceOptions.enableRainEffect) {
+    removeRainEffect(viewer.scene); // Bersihkan efek lama dulu
+    addRainEffect(viewer.scene);    // Mulai efek hujan baru
+  }
+  
   waterLevelEntities.forEach(entity => {
     if (entity.polygon) {
+      entity.polygon.heightReference = Cesium.HeightReference.NONE;
+      entity.polygon.extrudedHeightReference = Cesium.HeightReference.NONE;
+
       entity.polygon.extrudedHeight = new Cesium.CallbackProperty(function (time) {
-        if (!isAnimatingWater || !waterAnimationStartTime) {
-          return waterAnimationStartHeight;
-        }
+        if (!isAnimatingWater || !waterAnimationStartTime) return startHeight;
         
         const elapsedSec = Cesium.JulianDate.secondsDifference(time, waterAnimationStartTime);
         let h = waterAnimationStartHeight + elapsedSec * waterAnimationRiseRate;
         
-        // Batasi tinggi maksimum
+        // Batasi tinggi maksimum dan minimum
         if (h > waterAnimationEndHeight) h = waterAnimationEndHeight;
-        if (h < waterAnimationStartHeight) h = waterAnimationStartHeight;
+        if (h < startHeight) h = startHeight; // Tidak boleh di bawah ground level
         
         return h;
       }, false);
@@ -127,8 +245,28 @@ export function startFloodSimulation(viewer, rainMm, durationHours) {
   });
 
   viewer.clock.shouldAnimate = true;
-  console.log(`Simulasi banjir dimulai: ${rainMm}mm hujan, durasi ${durationHours} jam`);
-  console.log(`Kenaikan air: ${totalRise.toFixed(2)}m (dari ${waterAnimationStartHeight}m ke ${waterAnimationEndHeight.toFixed(2)}m)`);
+  
+  // Logging detail hanya jika diaktifkan
+  if (performanceOptions.enableDetailedLogging) {
+    console.log('=== SIMULASI BANJIR - PERHITUNGAN BARU ===');
+    console.log(`Kecamatan: ${calculation.historicalData.kecamatan}`);
+    console.log(`Data Historis: H=${calculation.historicalData.height}cm, RRISE=${calculation.historicalData.riseRate}cm/s, P=${calculation.historicalData.precipitation}mm, D=${calculation.historicalData.duration}jam`);
+    console.log(`Input User: P_baru=${rainMm}mm, D_baru=${durationHours}jam`);
+    console.log(`RiseRate historis: ${calculation.historicalRiseRate.toFixed(6)} cm/s`);
+    console.log(`Faktor curah hujan (f): ${calculation.precipitationFactor.toFixed(3)}`);
+    console.log(`RiseRate baru: ${(calculation.newRiseRate * 100).toFixed(6)} cm/s (${calculation.newRiseRate.toFixed(6)} m/s)`);
+    console.log(`Total kenaikan: ${calculation.totalRise.toFixed(2)}m`);
+    console.log(`Ketinggian akhir: ${waterAnimationEndHeight.toFixed(2)}m`);
+    console.log('==========================================');
+  } else {
+    // Logging ringkas untuk performa
+    console.log(`🌊 Simulasi dimulai: ${calculation.historicalData.kecamatan}, Kenaikan: ${calculation.totalRise.toFixed(2)}m`);
+  }
+    
+  } catch (error) {
+    console.error('Error dalam simulasi banjir:', error.message);
+    throw error;
+  }
 }
 
 /**

@@ -1,0 +1,60 @@
+[
+    { "lon": 123.088008, "lat": 0.496528, "text": "Leato" },
+    { "lon": 123.076261, "lat": 0.506437, "text": "Leato Utara" },
+    { "lon": 123.074663, "lat": 0.516745, "text": "Talumolo" },
+    { "lon": 123.062997, "lat": 0.527452, "text": "Bugis" },
+    { "lon": 123.076741, "lat": 0.525934, "text": "Botu" },
+
+    { "lon": 123.046136, "lat": 0.549587, "text": "Libuo" },
+    { "lon": 123.028797, "lat": 0.559255, "text": "Tuladenggi" },
+    { "lon": 123.038945, "lat": 0.563730, "text": "Huangobotu" },
+    { "lon": 123.043579, "lat": 0.567965, "text": "Tomulabutao Timur" },
+    { "lon": 123.042301, "lat": 0.572360, "text": "Tomulabutao" },
+
+    { "lon": 123.046459, "lat": 0.496848, "text": "Tanjung Keramat" },
+    { "lon": 123.057563, "lat": 0.519222, "text": "Tenda" },
+    { "lon": 123.040863, "lat": 0.515786, "text": "Pohe" },
+    { "lon": 123.053808, "lat": 0.528092, "text": "Siendeng" },
+    { "lon": 123.045897, "lat": 0.529530, "text": "Donggala" },
+
+    { "lon": 123.032233, "lat": 0.531767, "text": "Tenilo" },
+    { "lon": 123.025840, "lat": 0.535443, "text": "Buliide" },
+    { "lon": 123.015772, "lat": 0.537680, "text": "Pilolodaa" },
+    { "lon": 123.015372, "lat": 0.545751, "text": "Lekobalo" },
+    { "lon": 123.042780, "lat": 0.544473, "text": "Molosipat W" },
+    { "lon": 123.003226, "lat": 0.547669, "text": "Dembe I" },
+    { "lon": 123.033671, "lat": 0.552543, "text": "Buladu" },
+
+    { "lon": 123.058602, "lat": 0.534804, "text": "Biawao" },
+    { "lon": 123.056205, "lat": 0.541116, "text": "Limba B" },
+    { "lon": 123.061479, "lat": 0.547589, "text": "Limba U I" },
+    { "lon": 123.055645, "lat": 0.549107, "text": "Limba U II" },
+    { "lon": 123.054447, "lat": 0.535683, "text": "Biawu" },
+    
+    { "lon": 123.057963, "lat": 0.557418, "text": "Dulalowo Timur" },
+    { "lon": 123.048784, "lat": 0.554871, "text": "Wumialo" },
+    { "lon": 123.049493, "lat": 0.560054, "text": "Dulalowo" },
+    { "lon": 123.056045, "lat": 0.562931, "text": "Liluwo" },
+    { "lon": 123.057323, "lat": 0.567326, "text": "Pulubala" },
+    { "lon": 123.057756, "lat": 0.569471, "text": "Paguyaman" },
+
+    { "lon": 123.071520, "lat": 0.534796, "text": "Padebuolo" },
+    { "lon": 123.064676, "lat": 0.539206, "text": "Heledulaa Selatan" },
+    { "lon": 123.079200, "lat": 0.537001, "text": "Tamalate" },
+    { "lon": 123.073877, "lat": 0.545518, "text": "Moodu" },
+    { "lon": 123.066653, "lat": 0.547875, "text": "Heledulaa" },
+    { "lon": 123.064524, "lat": 0.533351, "text": "Ipilo" },
+
+    { "lon": 123.082242, "lat": 0.545746, "text": "Dembe Jaya" },
+    { "lon": 123.074334, "lat": 0.555327, "text": "Dembe II" },
+    { "lon": 123.084143, "lat": 0.557836, "text": "Wongkaditi" },
+    { "lon": 123.073953, "lat": 0.561106, "text": "Wongkaditi Barat" },
+    { "lon": 123.080797, "lat": 0.568406, "text": "Dulomo Selatan" },
+    { "lon": 123.082394, "lat": 0.576847, "text": "Dulomo" },
+
+    { "lon": 123.053422, "lat": 0.575478, "text": "Tapa" },
+    { "lon": 123.069391, "lat": 0.580725, "text": "Bulotadaa Timur" },
+    { "lon": 123.059810, "lat": 0.584223, "text": "Bulotadaa" },
+    { "lon": 123.065361, "lat": 0.572893, "text": "Tanggikiki" },
+    { "lon": 123.056540, "lat": 0.579280, "text": "Molosipat U" }
+]

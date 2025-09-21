@@ -8,14 +8,14 @@ export const PAGE_CONFIGS = {
   SIMULATION: {
     name: 'simulasi-banjir',
     dataLayers: [
-      { type: 'waterLevel', path: '/data/geojson/water/waterLevel.json' },
-      { type: 'adminBoundary', path: '/data/geojson/administrasi/areaKotaAdministrasiKotaGtlo.json' }
+      { type: 'waterLevel', path: '/data/geojson/water/kecamatan.json' }
     ],
     features: {
       simulation: true,
       uiControls: true,
       clockEvents: true,
-      labels: true
+      labels: true,
+      layerControls: true
     },
     logMessage: 'Aplikasi CesiumJS Simulasi Banjir berhasil diinisialisasi.'
   },
@@ -23,16 +23,15 @@ export const PAGE_CONFIGS = {
   BASE_MAP: {
     name: 'peta-dasar',
     dataLayers: [
-      { type: 'waterLevel', path: '/data/geojson/water/waterLevel.json' },
-      { type: 'adminBoundary', path: '/data/geojson/administrasi/lineAdmnKec.json' },
-      { type: 'adminBoundary', path: '/data/geojson/administrasi/areaKotaAdministrasiKotaGtlo.json' }
+      { type: 'waterLevel', path: '/data/geojson/water/waterLevel.json' }
     ],
     features: {
       simulation: false,
       uiControls: false,
       clockEvents: false,
       labels: true,
-      petaDasarUI: true
+      petaDasarUI: true,
+      layerControls: true
     },
     logMessage: 'Peta Dasar CesiumJS berhasil diinisialisasi.'
   },
@@ -41,8 +40,7 @@ export const PAGE_CONFIGS = {
   LSTM_PREDICTION: {
     name: 'prediksi-lstm',
     dataLayers: [
-      { type: 'waterLevel', path: '/data/geojson/water/waterLevel.json' },
-      { type: 'adminBoundary', path: '/data/geojson/administrasi/areaKotaAdministrasiKotaGtlo.json' }
+      { type: 'waterLevel', path: '/data/geojson/water/waterLevel.json' }
     ],
     features: {
       simulation: false,
@@ -50,7 +48,8 @@ export const PAGE_CONFIGS = {
       clockEvents: false,
       labels: true,
       lstmPrediction: true,  // 🧠 Fitur prediksi LSTM
-      charts: true           // 📊 Grafik prediksi
+      charts: true,          // 📊 Grafik prediksi
+      layerControls: true
     },
     logMessage: 'Halaman Prediksi LSTM berhasil diinisialisasi.'
   },

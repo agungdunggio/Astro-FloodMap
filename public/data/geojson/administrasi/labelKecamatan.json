@@ -1,0 +1,11 @@
+[
+    { "lon": 123.025807, "lat": 0.539135, "text": "Kota Barat" },
+    { "lon": 123.062215, "lat": 0.579999, "text": "Sipatana" },
+    { "lon": 123.075564, "lat": 0.510090, "text": "Dumbo Raya" },
+    { "lon": 123.057450, "lat": 0.545645, "text": "Kota Selatan" },
+    { "lon": 123.055317, "lat": 0.563404, "text": "Kota Tengah" },
+    { "lon": 123.079461, "lat": 0.567214, "text": "Kota Utara" },
+    { "lon": 123.069647, "lat": 0.540877, "text": "Kota Timur" },
+    { "lon": 123.048780, "lat": 0.516828, "text": "Hulonthalangi" },
+    { "lon": 123.038144, "lat": 0.564067, "text": "Dungingi" }
+]
