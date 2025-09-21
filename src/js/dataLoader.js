@@ -80,14 +80,16 @@ export async function loadWaterLevelGeoJson(viewer, geoJsonUrl) {
         const totalRise_cm = entity.properties?.TRISE?.getValue() || 0;
         const riseRate_cmps = entity.properties?.RRISE?.getValue() || 0;
         const kecamatanName = entity.properties?.WADMKC?.getValue() || 'Unknown';
+        const precipitation = parseFloat(import.meta.env.PUBLIC_PRECIPITATION) || 0;
+        const duration = parseFloat(import.meta.env.PUBLIC_DURATION) || 0;
 
         // Simpan data historis di entity untuk digunakan di simulationManager
         entity.historicalData = {
           kecamatan: kecamatanName,
           height: totalRise_cm, // cm
           riseRate: riseRate_cmps, // cm/s
-          precipitation: 54.4, // mm (dari contoh)
-          duration: 10 // jam (dari contoh)
+          precipitation: precipitation,
+          duration: duration,
         };
 
         // Konversi ke meter untuk internal use
