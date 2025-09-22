@@ -1,5 +1,6 @@
 // src/js/uiControl/layerControls.js
 import { switchAdminLayer, cleanupAllLayers } from '../dataLoader.js';
+import { PANEL_OFFSET } from '../../constants/ui.js';
 
 let layerPanelVisible = false;
 let currentLayerType = 'kecamatan';
@@ -198,7 +199,7 @@ function toggleLayerPanel() {
   if (layerPanelVisible) {
     // Posisi panel tepat di bawah tombol layer
     const buttonRect = button.getBoundingClientRect();
-    panel.style.top = Math.round(buttonRect.bottom + 10) + 'px';
+    panel.style.top = Math.round(buttonRect.bottom + PANEL_OFFSET) + 'px';
     panel.style.right = Math.round(window.innerWidth - buttonRect.right) + 'px';
     panel.style.display = 'block';
     // Force reflow

@@ -1,6 +1,7 @@
 // src/js/uiControl/legendControls.js
 import { WATER_COLOR_LEGEND } from '../utils/colorUtils.js';
 import { DEFAULT_COLOR } from '../../constants/color.js';
+import { PANEL_OFFSET } from '../../constants/ui.js';
 
 let legendPanelVisible = false;
 
@@ -81,7 +82,7 @@ function createLegendPanel() {
   `;
 
   const title = document.createElement('div');
-  title.textContent = 'Legenda Kedalaman Air';
+  title.textContent = 'Kedalaman Air';
   title.style.cssText = `
     font-weight: bold;
     margin-bottom: 10px;
@@ -112,7 +113,7 @@ function createLegendPanel() {
       border-radius: 3px;
       border: 1px solid #666;
       display: inline-block;
-      background: ${color.toCssColorString ? color.toCssColorString() : DEFAULT_COLOR};
+      background: ${color?.toCssColorString?.() ?? DEFAULT_COLOR};
     `;
 
     const label = document.createElement('span');
@@ -153,7 +154,7 @@ function toggleLegendPanel() {
   if (legendPanelVisible) {
     // Posisi panel tepat di bawah tombol legend
     const buttonRect = button.getBoundingClientRect();
-    panel.style.top = Math.round(buttonRect.bottom + 10) + 'px';
+    panel.style.top = Math.round(buttonRect.bottom + PANEL_OFFSET) + 'px';
     panel.style.right = Math.round(window.innerWidth - buttonRect.right) + 'px';
     panel.style.display = 'block';
     panel.offsetHeight; // force reflow
