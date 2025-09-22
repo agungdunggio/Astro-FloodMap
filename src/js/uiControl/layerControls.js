@@ -1,5 +1,6 @@
 // src/js/uiControl/layerControls.js
 import { switchAdminLayer, cleanupAllLayers } from '../dataLoader.js';
+import { PANEL_OFFSET } from '../../constants/uiConstants.js';
 
 let layerPanelVisible = false;
 let currentLayerType = 'kecamatan';
@@ -16,8 +17,13 @@ export function initializeLayerControls(viewer) {
   // Create layer control panel (initially hidden)
   const layerControlPanel = createLayerPanel(viewer);
   
-  // Add both to page
-  document.body.appendChild(toggleButton);
+  // Add to Cesium toolbar if available for horizontal alignment with Home button
+  const toolbar = document.querySelector('.cesium-viewer-toolbar');
+  if (toolbar) {
+    toolbar.appendChild(toggleButton);
+  } else {
+    document.body.appendChild(toggleButton);
+  }
   document.body.appendChild(layerControlPanel);
 
   // Add click outside listener
@@ -36,35 +42,25 @@ function createToggleButton() {
   button.id = 'layer-toggle-button';
   button.innerHTML = '<ion-icon name="map-sharp"></ion-icon>';
   button.title = 'Layer Administrasi';
+  button.className = 'cesium-button cesium-toolbar-button';
   button.style.cssText = `
-    position: absolute;
-    top: 50px;
-    right: 8px;
-    width: 40px;
-    height: 40px;
-    background: rgba(42, 42, 42, 0.9);
-    border: 1px solid #444;
-    border-radius: 8px;
-    color: white;
-    font-size: 18px;
-    cursor: pointer;
-    z-index: 1001;
-    display: flex;
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    margin-left: 6px;
+    font-size: 16px;
+    border-radius: 6px;
   `;
 
   // Hover effects
   button.addEventListener('mouseenter', () => {
-    button.style.backgroundColor = 'rgba(66, 66, 66, 0.95)';
-    button.style.transform = 'scale(1.05)';
+    button.style.filter = 'brightness(1.1)';
   });
 
   button.addEventListener('mouseleave', () => {
-    button.style.backgroundColor = 'rgba(42, 42, 42, 0.9)';
-    button.style.transform = 'scale(1)';
+    button.style.filter = 'none';
   });
 
   // Toggle panel visibility
@@ -85,8 +81,8 @@ function createLayerPanel(viewer) {
   panel.id = 'layer-controls-panel';
   panel.style.cssText = `
     position: absolute;
-    top: 70px;
-    right: 20px;
+    top: 0px;
+    right: 0px;
     background: rgba(42, 42, 42, 0.95);
     border: 1px solid #444;
     border-radius: 8px;
@@ -201,16 +197,20 @@ function toggleLayerPanel() {
   layerPanelVisible = !layerPanelVisible;
 
   if (layerPanelVisible) {
+    // Posisi panel tepat di bawah tombol layer
+    const buttonRect = button.getBoundingClientRect();
+    panel.style.top = Math.round(buttonRect.bottom + PANEL_OFFSET) + 'px';
+    panel.style.right = Math.round(window.innerWidth - buttonRect.right) + 'px';
     panel.style.display = 'block';
     // Force reflow
     panel.offsetHeight;
     panel.style.opacity = '1';
     panel.style.transform = 'translateY(0)';
-    button.style.backgroundColor = 'rgba(76, 175, 80, 0.9)';
+    button.style.outline = '2px solid rgba(76, 175, 80, 0.9)';
   } else {
     panel.style.opacity = '0';
     panel.style.transform = 'translateY(-10px)';
-    button.style.backgroundColor = 'rgba(42, 42, 42, 0.9)';
+    button.style.outline = 'none';
     setTimeout(() => {
       panel.style.display = 'none';
     }, 300);

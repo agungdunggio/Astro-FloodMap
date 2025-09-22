@@ -15,7 +15,8 @@ export const PAGE_CONFIGS = {
       uiControls: true,
       clockEvents: true,
       labels: true,
-      layerControls: true
+      layerControls: true,
+      legendControls: true
     },
     logMessage: 'Aplikasi CesiumJS Simulasi Banjir berhasil diinisialisasi.'
   },
@@ -31,7 +32,8 @@ export const PAGE_CONFIGS = {
       clockEvents: false,
       labels: true,
       petaDasarUI: true,
-      layerControls: true
+      layerControls: true,
+      legendControls: true
     },
     logMessage: 'Peta Dasar CesiumJS berhasil diinisialisasi.'
   },
@@ -49,7 +51,8 @@ export const PAGE_CONFIGS = {
       labels: true,
       lstmPrediction: true,  // 🧠 Fitur prediksi LSTM
       charts: true,          // 📊 Grafik prediksi
-      layerControls: true
+      layerControls: true,
+      legendControls: true
     },
     logMessage: 'Halaman Prediksi LSTM berhasil diinisialisasi.'
   },
