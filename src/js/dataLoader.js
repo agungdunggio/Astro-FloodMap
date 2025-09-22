@@ -311,7 +311,7 @@ export function resetWaterLevelToStatic() {
     entity.polygon.extrudedHeight = baseHeight;
     entity.polygon.height = baseHeight;
 
-    entity.polygon.material = Cesium.Color.fromCssColorString("#00BFFF").withAlpha(0.7);
+    entity.polygon.material = WATER_COLORS.c0;
   });
   console.log('Water level direset ke base height yang sudah ditentukan.');
 }

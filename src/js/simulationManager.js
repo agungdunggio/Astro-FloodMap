@@ -13,16 +13,6 @@ let rainEventEndJulianDate = null;
 // Variabel untuk animasi air banjir
 let isAnimatingWater = false;
 let waterAnimationStartTime = null;
-let waterAnimationRiseRate = 0;     // Laju kenaikan (meter per detik)
-
-function computeDepthM(time, riseRateMps, maxDepthM) {
-  if (!isAnimatingWater || !waterAnimationStartTime) return 0.0;
-  const elapsedSec = Cesium.JulianDate.secondsDifference(time, waterAnimationStartTime);
-  let d = elapsedSec * riseRateMps;
-  if (d < 0) d = 0;
-  if (d > maxDepthM) d = maxDepthM;
-  return d;
-}
 
 export function initializeSimulationClockEvents(viewer) {
   viewer.clock.onTick.addEventListener(function(clock) {
@@ -168,6 +158,24 @@ export function calculateFloodRise(rainMm, durationHours, kecamatanName = null) 
     historicalData: historicalData
   };
 }
+ 
+function computeEntityDynamics(entity, rainMm, durationHours) {
+  const h = entity.historicalData;
+  if (!h) return { riseRateMps: 0, totalRiseM: 0 };
+
+  // faktor hujan relatif ke data historis entity
+  const baseP = (h.precipitation && h.precipitation > 0) ? h.precipitation : rainMm;
+  const f = rainMm / baseP;
+
+  // RRISE (cm/s) -> m/s lalu diskalakan faktor hujan
+  const riseRateMps = ((h.riseRate || 0) / 100) * f;
+
+  // total kenaikan selama durasi (m)
+  const totalRiseM = riseRateMps * (durationHours * 3600);
+
+  return { riseRateMps, totalRiseM };
+}
+
 
 /**
  * Memulai simulasi banjir dengan animasi kenaikan air
@@ -188,8 +196,6 @@ export function startFloodSimulation(viewer, rainMm, durationHours, kecamatanNam
   try {
     const calculation = calculateFloodRise(rainMm, durationHours, kecamatanName);
     const durationSeconds = durationHours * 3600;
-
-    waterAnimationRiseRate = calculation.newRiseRate;
 
     // Atur jam viewer
     const now = Cesium.JulianDate.now();
@@ -214,38 +220,38 @@ export function startFloodSimulation(viewer, rainMm, durationHours, kecamatanNam
     // Terapkan animasi ke setiap entitas
     waterLevelEntities.forEach(entity => {
       if (!entity?.polygon || !entity.historicalData) return;
-
+    
       const baseHeight = entity.historicalData.baseHeight;
-      const totalRiseForEntity = calculation.totalRise; // total kenaikan sama untuk semua
+      const { riseRateMps, totalRiseM } = computeEntityDynamics(entity, rainMm, durationHours);
 
-      // Dasar air tetap di baseHeight
-      entity.polygon.extrudedHeight = baseHeight;
-
-      // Permukaan air (height) yang akan dianimasikan
-      entity.polygon.height = new Cesium.CallbackProperty((time) => {
-        if (!isAnimatingWater || !waterAnimationStartTime) return baseHeight;
-
-        const elapsedSec = Cesium.JulianDate.secondsDifference(time, waterAnimationStartTime);
-        let depth = elapsedSec * waterAnimationRiseRate;
-
-        // Batasi kedalaman agar tidak melebihi total kenaikan
-        if (depth < 0) depth = 0;
-        if (depth > totalRiseForEntity) depth = totalRiseForEntity;
-
-        return baseHeight + depth; // Ketinggian absolut = dasar + kedalaman
-      }, false);
-
-      entity.polygon.material = createDepthColorMaterial(
-        (time) => {
-          return computeDepthM(time, waterAnimationRiseRate, totalRiseForEntity);
-        }
+      console.log(
+        `[SIM] ${entity.historicalData.kecamatan}: base=${baseHeight.toFixed(2)}m,` +
+        ` RRISE=${(entity.historicalData.riseRate || 0).toFixed(4)} cm/s,` +
+        ` rate=${riseRateMps.toFixed(4)} m/s, totalRise=${totalRiseM.toFixed(2)} m`
       );
+    
+      // Absolute mode (dasar tetap di baseHeight)
+      entity.polygon.heightReference = Cesium.HeightReference.NONE;
+      entity.polygon.extrudedHeightReference = Cesium.HeightReference.NONE;
+      entity.polygon.extrudedHeight = baseHeight;
+    
+      const depthGetter = (time) => {
+        if (!isAnimatingWater || !waterAnimationStartTime) return 0;
+        const elapsed = Cesium.JulianDate.secondsDifference(time, waterAnimationStartTime);
+        return Math.min(Math.max(elapsed * riseRateMps, 0), totalRiseM);
+      };
+    
+      entity.polygon.height = new Cesium.CallbackProperty(
+        (time) => baseHeight + depthGetter(time), false
+      );
+    
+      entity.polygon.material = createDepthColorMaterial(depthGetter);
     });
 
     viewer.clock.shouldAnimate = true;
 
     // Logging
-    console.log(`🌊 Simulasi dimulai: ${calculation.historicalData.kecamatan}, Kenaikan: ${calculation.totalRise.toFixed(2)}m dari base height.`);
+    console.log(`🌊 Simulasi dimulai — durasi ${durationHours} jam, hujan ${rainMm} mm. Kenaikan & warna per-kecamatan mengikuti RRISE masing-masing.`);
 
   } catch (error) {
     console.error('Error dalam simulasi banjir:', error.message);
