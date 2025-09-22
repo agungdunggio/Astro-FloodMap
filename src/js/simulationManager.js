@@ -2,6 +2,7 @@
 import * as Cesium from 'cesium';
 import { waterLevelEntities, resetWaterLevelToStatic, getHistoricalData, getAvailableKecamatan } from './dataLoader.js';
 import { addRainEffect, removeRainEffect, currentRainParticleSystem as rainSystemFromEffectModule } from './rainEffect.js';
+import { createDepthColorMaterial } from './utils/colorUtils.js';
 
 export { getAvailableKecamatan };
 
@@ -13,6 +14,15 @@ let rainEventEndJulianDate = null;
 let isAnimatingWater = false;
 let waterAnimationStartTime = null;
 let waterAnimationRiseRate = 0;     // Laju kenaikan (meter per detik)
+
+function computeDepthM(time, riseRateMps, maxDepthM) {
+  if (!isAnimatingWater || !waterAnimationStartTime) return 0.0;
+  const elapsedSec = Cesium.JulianDate.secondsDifference(time, waterAnimationStartTime);
+  let d = elapsedSec * riseRateMps;
+  if (d < 0) d = 0;
+  if (d > maxDepthM) d = maxDepthM;
+  return d;
+}
 
 export function initializeSimulationClockEvents(viewer) {
   viewer.clock.onTick.addEventListener(function(clock) {
@@ -224,6 +234,12 @@ export function startFloodSimulation(viewer, rainMm, durationHours, kecamatanNam
 
         return baseHeight + depth; // Ketinggian absolut = dasar + kedalaman
       }, false);
+
+      entity.polygon.material = createDepthColorMaterial(
+        (time) => {
+          return computeDepthM(time, waterAnimationRiseRate, totalRiseForEntity);
+        }
+      );
     });
 
     viewer.clock.shouldAnimate = true;
