@@ -4,10 +4,10 @@ import * as Cesium from 'cesium';
 export const WATER_THRESHOLDS_M = [0.4, 1.0, 1.8];
 
 export const WATER_COLORS = {
-  c0: Cesium.Color.fromCssColorString("#00BFFF").withAlpha(0.70), // 0–40 cm
-  c1: Cesium.Color.fromCssColorString("#0092E0").withAlpha(0.75), // 40–100 cm
-  c2: Cesium.Color.fromCssColorString("#006FB3").withAlpha(0.80), // 100–180 cm
-  c3: Cesium.Color.fromCssColorString("#004C80").withAlpha(0.85), // >180 cm
+    c0: Cesium.Color.fromCssColorString('#00BFFF').withAlpha(0.78), // 0–40 cm
+    c1: Cesium.Color.fromCssColorString('#008FE6').withAlpha(0.78), // 40–100 cm (turunin L cukup jauh)
+    c2: Cesium.Color.fromCssColorString('#0062CC').withAlpha(0.80), // 100–180 cm
+    c3: Cesium.Color.fromCssColorString('#003080').withAlpha(0.85), // >180 cm (lebih gelap jelas)
 };
 
 // Tentukan warna dari kedalaman (meter)
@@ -30,8 +30,8 @@ export function createDepthColorMaterial(depthGetter, palette = WATER_COLORS, th
 
 // Opsional: buat legend UI
 export const WATER_COLOR_LEGEND = [
-  { range: '0–40 cm',   color: WATER_COLORS.c0 },
-  { range: '40–100 cm', color: WATER_COLORS.c1 },
-  { range: '100–180 cm',color: WATER_COLORS.c2 },
+  { range: '0 – 40 cm',   color: WATER_COLORS.c0 },
+  { range: '40 – 100 cm', color: WATER_COLORS.c1 },
+  { range: '100 – 180 cm',color: WATER_COLORS.c2 },
   { range: '> 180 cm',  color: WATER_COLORS.c3 },
 ];

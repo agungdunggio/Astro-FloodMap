@@ -1,5 +1,6 @@
 // src/js/dataLoader.js
 import * as Cesium from 'cesium';
+import { WATER_COLORS } from './utils/colorUtils.js';
 
 export let waterLevelEntities = [];
 // export const startHeight = -5;
@@ -113,7 +114,7 @@ export async function loadWaterLevelGeoJson(viewer, geoJsonUrl) {
         entity.riseRate_mps = riseRate_cmps / 100.0; // cm/s ke m/s
 
         // Optimasi styling polygon untuk performa yang lebih baik
-        entity.polygon.material = Cesium.Color.fromCssColorString("#00BFFF").withAlpha(0.7);
+        entity.polygon.material = WATER_COLORS.c0;
         entity.polygon.outline = false; // Hapus outline// top = -50 m
         entity.polygon.height = baseHeight;
         entity.polygon.extrudedHeight = baseHeight;
