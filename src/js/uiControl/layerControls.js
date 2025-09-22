@@ -1,6 +1,6 @@
 // src/js/uiControl/layerControls.js
 import { switchAdminLayer, cleanupAllLayers } from '../dataLoader.js';
-import { PANEL_OFFSET } from '../../constants/ui.js';
+import { PANEL_OFFSET } from '../../constants/uiConstants.js';
 
 let layerPanelVisible = false;
 let currentLayerType = 'kecamatan';

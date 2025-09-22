@@ -32,6 +32,6 @@ export function createDepthColorMaterial(depthGetter, palette = WATER_COLORS, th
 export const WATER_COLOR_LEGEND = [
   { range: '0 – 40 cm',   color: WATER_COLORS.c0 },
   { range: '40 – 100 cm', color: WATER_COLORS.c1 },
-  { range: '100 – 180 cm',color: WATER_COLORS.c2 },
+  { range: '100 – 180 cm', color: WATER_COLORS.c2 },
   { range: '> 180 cm',  color: WATER_COLORS.c3 },
 ];

@@ -1,7 +1,7 @@
 // src/js/uiControl/legendControls.js
 import { WATER_COLOR_LEGEND } from '../utils/colorUtils.js';
-import { DEFAULT_COLOR } from '../../constants/color.js';
-import { PANEL_OFFSET } from '../../constants/ui.js';
+import { DEFAULT_COLOR } from '../../constants/colorConstants.js';
+import { PANEL_OFFSET } from '../../constants/uiConstants.js';
 
 let legendPanelVisible = false;
 
