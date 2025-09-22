@@ -1,5 +1,6 @@
 // src/js/uiControl/legendControls.js
 import { WATER_COLOR_LEGEND } from '../utils/colorUtils.js';
+import { DEFAULT_COLOR } from '../../constants/color.js';
 
 let legendPanelVisible = false;
 
@@ -111,7 +112,7 @@ function createLegendPanel() {
       border-radius: 3px;
       border: 1px solid #666;
       display: inline-block;
-      background: ${color.toCssColorString ? color.toCssColorString() : '#1e88e5'};
+      background: ${color.toCssColorString ? color.toCssColorString() : DEFAULT_COLOR};
     `;
 
     const label = document.createElement('span');
