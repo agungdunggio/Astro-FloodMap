@@ -1,5 +1,3 @@
-// src/js/utils/notify.js
-
 let containerEl = null;
 
 function ensureContainer() {
