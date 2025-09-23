@@ -34,7 +34,6 @@ function makeToast({ id, text, type = 'info', spinning = false }) {
     box-shadow: 0 6px 16px rgba(0,0,0,0.15);
     color: ${fgFor(type)};
     background: ${bgFor(type)};
-    border: 1px solid ${borderFor(type)};
     pointer-events: auto;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     transform: translateX(24px);
