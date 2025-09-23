@@ -1,6 +1,8 @@
 // src/js/bmkgAggregatedForecast.js
 
 // Struktur data wilayah (GANTI DENGAN DATA SEBENARNYA)
+import { showLoadingToast, successToast, warningToast, errorToast } from '../utils/notify.js';
+
 const KOTA_GORONTALO_STRUCTURE = {
     "Kota Tengah": {
         namaResmi: "Kecamatan Kota Tengah", // Nama yang akan ditampilkan
@@ -145,10 +147,12 @@ function aggregateForecastsForKecamatan(allKelurahanForecasts) {
  */
 export async function getAggregatedForecastForKotaGorontalo() {
     const allKecamatanData = {};
+    const makeId = (key) => `fetch-${key.replace(/\s+/g,'-').toLowerCase()}`;
 
     for (const kecamatanKey in KOTA_GORONTALO_STRUCTURE) {
         const kecamatanInfo = KOTA_GORONTALO_STRUCTURE[kecamatanKey];
-        console.log(`Mengambil data untuk ${kecamatanInfo.namaResmi}...`);
+        // Trigger toast loading per kecamatan
+        showLoadingToast(makeId(kecamatanKey), `Memuat ${kecamatanInfo.namaResmi}...`);
         const kelurahanForecastsPromises = kecamatanInfo.adm4_codes.map(adm4 => fetchForecastForSingleAdm4(adm4));
         
         try {
@@ -162,16 +166,17 @@ export async function getAggregatedForecastForKotaGorontalo() {
                         namaResmi: kecamatanInfo.namaResmi,
                         forecasts: aggregated
                     };
+                    successToast(makeId(kecamatanKey), `${kecamatanInfo.namaResmi} berhasil`);
                 } else {
-                    console.warn(`Tidak ada data valid untuk diagregasi di ${kecamatanInfo.namaResmi}`);
+                    warningToast(makeId(kecamatanKey), `${kecamatanInfo.namaResmi}: tidak ada data valid`);
                     allKecamatanData[kecamatanKey] = { namaResmi: kecamatanInfo.namaResmi, forecasts: [] };
                 }
             } else {
-                console.warn(`Tidak ada data yang berhasil diambil untuk ${kecamatanInfo.namaResmi}`);
+                warningToast(makeId(kecamatanKey), `${kecamatanInfo.namaResmi}: semua request kosong`);
                 allKecamatanData[kecamatanKey] = { namaResmi: kecamatanInfo.namaResmi, forecasts: [] };
             }
         } catch (error) {
-            console.error(`Error saat memproses kecamatan ${kecamatanInfo.namaResmi}:`, error);
+            errorToast(makeId(kecamatanKey), `${kecamatanInfo.namaResmi}: gagal`);
             allKecamatanData[kecamatanKey] = { namaResmi: kecamatanInfo.namaResmi, forecasts: [] };
         }
         // Tambahkan delay kecil untuk menghindari rate limit API jika mengambil banyak kecamatan sekaligus
