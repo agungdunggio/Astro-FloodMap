@@ -366,6 +366,7 @@ export function enableScheduledPerKecamatanFlood(viewer, durationHours = 3) {
   if (!intervalsMap || intervalsMap.size === 0) return () => {};
 
   const activeByName = new Map(); // name -> { start: JulianDate, end: JulianDate, baseHeight, riseRateMps, totalRiseM }
+  const loggedStartByName = new Map(); // name -> last start logged
 
   const onTick = function(clock) {
     const nowDate = Cesium.JulianDate.toDate(clock.currentTime);
@@ -435,31 +436,30 @@ export function enableScheduledPerKecamatanFlood(viewer, durationHours = 3) {
 
           activeByName.set(name, { start, end, baseHeight, riseRateMps, totalRiseM });
 
-          // Logging ke console & kirim ke UI tabel log
+          // Logging ke console & kirim ke UI tabel log (hindari duplikat untuk event yang sama)
           try {
             const riseM = totalRiseM;
             const riseCm = riseM * 100;
             const hBaru = baseHeight + riseM;
             const durasiJam = (blockStart && blockEnd) ? ((blockEnd - blockStart) / 3600000) : dynamicHours;
             const startDate = Cesium.JulianDate.toDate(start);
-            console.log(
-              `[START FLOOD] Kecamatan: ${name} | maxMm=${maxMm.toFixed(2)} | baseHeight=${baseHeight.toFixed(2)} m | ` +
-              `rate=${riseRateMps.toFixed(5)} m/s | riseM=${riseM.toFixed(5)} m | riseCm=${riseCm.toFixed(2)} cm | ` +
-              `HBaru=${hBaru.toFixed(5)} m | durasi=${durasiJam.toFixed(2)} jam | jam=${startDate.toLocaleString('id-ID')}`
-            );
-
-            window.dispatchEvent(new CustomEvent('floodStartLog', {
-              detail: {
-                timestampIso: startDate.toISOString(),
-                name,
-                maxMm,
-                baseHeight,
-                riseM,
-                riseCm,
-                hBaru,
-                durationHours: durasiJam
-              }
-            }));
+            const lastLoggedIso = loggedStartByName.get(name);
+            const thisIso = startDate.toISOString();
+            if (lastLoggedIso !== thisIso) {
+              window.dispatchEvent(new CustomEvent('floodStartLog', {
+                detail: {
+                  timestampIso: thisIso,
+                  name,
+                  maxMm,
+                  baseHeight,
+                  riseM,
+                  riseCm,
+                  hBaru,
+                  durationHours: durasiJam
+                }
+              }));
+              loggedStartByName.set(name, thisIso);
+            }
           } catch(_) { /* noop */ }
         }
       } else if (active) {

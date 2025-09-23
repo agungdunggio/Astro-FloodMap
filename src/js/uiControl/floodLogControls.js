@@ -23,6 +23,11 @@ export function initializeFloodLogControls(_viewer) {
     appendLogRow(d);
   });
 
+  // Clear log by event
+  window.addEventListener('clearFloodLog', () => {
+    if (tableBodyEl) tableBodyEl.innerHTML = '';
+  });
+
   document.addEventListener('click', handleClickOutside);
 }
 
