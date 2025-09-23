@@ -1,6 +1,7 @@
 // src/js/petaDasarPageController.js
 import { getAggregatedForecastForKotaGorontalo } from '../fetch/bmkgAggregatedForecast.js';
 import { initRainForecastScheduler, updateRainForecastData } from '../forecast/rainForecastScheduler.js';
+import { startFloodSimulationPerKecamatan, enableScheduledPerKecamatanFlood } from '../simulationManager.js';
 
 let fetchedAggregatedData = null;
 
@@ -63,6 +64,15 @@ async function fetchAndPrepareAggregatedForecast(viewer) {
   // Dispatch custom event with fetched data
   window.dispatchEvent(new CustomEvent('updateForecastData', { detail: fetchedAggregatedData }));
 
+  // Aktifkan simulasi terjadwal per-kecamatan 3 jam mengikuti interval prakiraan (tanpa membatasi timeline)
+  try {
+    if (viewer) {
+      enableScheduledPerKecamatanFlood(viewer, 3 /* jam */);
+    }
+  } catch (e) {
+    console.warn('Gagal mengaktifkan simulasi banjir terjadwal per-kecamatan:', e);
+  }
+
   toggleLoading(false);
   return fetchedAggregatedData;
 }
@@ -70,6 +80,7 @@ async function fetchAndPrepareAggregatedForecast(viewer) {
 // Initialize UI
 export function initializePetaDasarPageUI(viewer) {
   const openBtn = document.getElementById('openForecastBtn');
+  let disposeScheduled = null;
 
   if (openBtn) {
     openBtn.addEventListener('click', async () => {
@@ -81,6 +92,28 @@ export function initializePetaDasarPageUI(viewer) {
       }
     });
   }
+
+  // Listener untuk reload dari modal: reset scheduler & simulasi lalu fetch ulang
+  window.addEventListener('requestReloadForecast', async () => {
+    try {
+      // Reset state simulasi (tinggikan air ke base) tanpa mengubah rentang timeline
+      if (viewer) {
+        // Bersihkan pendengar simulasi terjadwal sebelumnya jika ada
+        if (typeof disposeScheduled === 'function') {
+          disposeScheduled();
+          disposeScheduled = null;
+        }
+      }
+      // Bersihkan tabel log flood
+      window.dispatchEvent(new CustomEvent('clearFloodLog'));
+      await fetchAndPrepareAggregatedForecast(viewer);
+      if (viewer) {
+        disposeScheduled = enableScheduledPerKecamatanFlood(viewer, 3);
+      }
+    } catch (e) {
+      console.warn('Gagal reload prakiraan & reset simulasi:', e);
+    }
+  });
 
   console.log("UI Controller untuk Peta Dasar (modal BMKG) telah diinisialisasi.");
 }

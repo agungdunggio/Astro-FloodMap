@@ -99,4 +99,38 @@ export function disposeRainForecastScheduler() {
   schedulerState.forecastsByKecamatan = new Map();
 }
 
+/**
+ * Mendapatkan peta curah hujan (mm) aktif pada waktu clock saat ini per kecamatan.
+ * @param {Cesium.Viewer} viewer
+ * @returns {Map<string, number>} NamaKecamatan -> mm (0 jika tidak ada hujan)
+ */
+export function getCurrentPrecipitationMap(viewer) {
+  const result = new Map();
+  if (!viewer || schedulerState.forecastsByKecamatan.size === 0) return result;
+
+  const now = Cesium.JulianDate.toDate(viewer.clock.currentTime);
+
+  schedulerState.forecastsByKecamatan.forEach((intervals, name) => {
+    let mm = 0;
+    for (let i = 0; i < intervals.length; i++) {
+      const iv = intervals[i];
+      if (now >= iv.start && now < iv.end) {
+        mm = Number(iv.precipitation || 0);
+        break;
+      }
+    }
+    result.set(name, mm);
+  });
+
+  return result;
+}
+
+/**
+ * Ekspor salinan struktur interval prakiraan untuk dipakai scheduler simulasi banjir.
+ * @returns {Map<string, Array<{ start: Date, end: Date, precipitation: number }>>}
+ */
+export function getForecastIntervalsMap() {
+  return new Map(schedulerState.forecastsByKecamatan);
+}
+
 

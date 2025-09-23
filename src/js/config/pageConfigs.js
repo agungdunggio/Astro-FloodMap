@@ -31,6 +31,7 @@ export const PAGE_CONFIGS = {
       uiControls: false,
       clockEvents: false,
       labels: true,
+      floodLogControls: true,
       petaDasarUI: true,
       layerControls: true,
       legendControls: true
@@ -49,6 +50,7 @@ export const PAGE_CONFIGS = {
       uiControls: false,
       clockEvents: false,
       labels: true,
+      floodLogControls: true,
       lstmPrediction: true,  // 🧠 Fitur prediksi LSTM
       charts: true,          // 📊 Grafik prediksi
       layerControls: true,

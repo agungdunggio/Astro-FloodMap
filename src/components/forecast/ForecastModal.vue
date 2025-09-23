@@ -115,12 +115,10 @@ export default defineComponent({
     const reloadForecast = async () => {
       try {
         isReloading.value = true;
-        const data = await getAggregatedForecastForKotaGorontalo();
-        forecasts.value = data || {};
-        isModalVisible.value = true;
+        // Delegasikan reload ke controller agar semua state (scheduler & simulasi) ter-reset
+        window.dispatchEvent(new CustomEvent('requestReloadForecast'));
       } catch (e) {
         console.error('Gagal memuat ulang prakiraan:', e);
-      } finally {
         isReloading.value = false;
       }
     };
@@ -130,6 +128,8 @@ export default defineComponent({
       window.addEventListener('updateForecastData', (event) => {
         forecasts.value = event.detail || {};
         isModalVisible.value = true;
+        // Selesai reload
+        isReloading.value = false;
       });
 
       // Listener untuk klik di luar modal
