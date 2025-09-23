@@ -1,6 +1,7 @@
 // src/js/simulationManager.js
 import * as Cesium from 'cesium';
 import { waterLevelEntities, resetWaterLevelToStatic, getHistoricalData, getAvailableKecamatan } from './dataLoader.js';
+import { getCurrentPrecipitationMap, getForecastIntervalsMap } from './forecast/rainForecastScheduler.js';
 import { addRainEffect, removeRainEffect, currentRainParticleSystem as rainSystemFromEffectModule } from './rainEffect.js';
 import { createDepthColorMaterial } from './utils/colorUtils.js';
 
@@ -201,9 +202,12 @@ export function startFloodSimulation(viewer, rainMm, durationHours, kecamatanNam
     const now = Cesium.JulianDate.now();
     viewer.clock.startTime = now.clone();
     viewer.clock.currentTime = now.clone();
-    viewer.clock.stopTime = Cesium.JulianDate.addSeconds(now, durationSeconds, new Cesium.JulianDate());
+    // Perluas rentang timeline hingga 3 hari ke depan agar bisa di-scrub panjang
+    const threeDaysSeconds = 3 * 24 * 3600;
+    viewer.clock.stopTime = Cesium.JulianDate.addSeconds(now, threeDaysSeconds, new Cesium.JulianDate());
     viewer.clock.multiplier = performanceOptions.clockMultiplier;
-    viewer.clock.clockRange = Cesium.ClockRange.LOOP_STOP;
+    // UNBOUNDED agar timeline bisa di-geser bebas (seperti sebelumnya)
+    viewer.clock.clockRange = Cesium.ClockRange.UNBOUNDED;
 
     waterAnimationStartTime = now.clone();
     isAnimatingWater = true;
@@ -217,15 +221,24 @@ export function startFloodSimulation(viewer, rainMm, durationHours, kecamatanNam
       addRainEffect(viewer.scene);
     }
 
+    // Ambil curah hujan aktif per kecamatan dari scheduler (jika ada)
+    const currentPrecMap = getCurrentPrecipitationMap(viewer);
+
     // Terapkan animasi ke setiap entitas
     waterLevelEntities.forEach(entity => {
       if (!entity?.polygon || !entity.historicalData) return;
     
       const baseHeight = entity.historicalData.baseHeight;
-      const { riseRateMps, totalRiseM } = computeEntityDynamics(entity, rainMm, durationHours);
+      // Tentukan curah hujan untuk entity ini: pakai dari scheduler jika >0, else fallback ke rainMm argumen
+      const name = entity.historicalData.kecamatan;
+      const mmFromScheduler = currentPrecMap.get(name) || 0;
+      const effectiveRainMm = (mmFromScheduler && mmFromScheduler > 0) ? mmFromScheduler : rainMm;
+
+      const { riseRateMps, totalRiseM } = computeEntityDynamics(entity, effectiveRainMm, durationHours);
 
       console.log(
         `[SIM] ${entity.historicalData.kecamatan}: base=${baseHeight.toFixed(2)}m,` +
+        ` rain=${effectiveRainMm} mm,` +
         ` RRISE=${(entity.historicalData.riseRate || 0).toFixed(4)} cm/s,` +
         ` rate=${riseRateMps.toFixed(4)} m/s, totalRise=${totalRiseM.toFixed(2)} m`
       );
@@ -248,7 +261,13 @@ export function startFloodSimulation(viewer, rainMm, durationHours, kecamatanNam
       entity.polygon.material = createDepthColorMaterial(depthGetter);
     });
 
-    viewer.clock.shouldAnimate = true;
+    // Mulai dalam keadaan pause agar mudah di-scrub; user bisa tekan Play sendiri
+    viewer.clock.shouldAnimate = false;
+
+    // Zoom timeline agar menampilkan rentang penuh 3 hari
+    if (viewer.timeline) {
+      viewer.timeline.zoomTo(viewer.clock.startTime, viewer.clock.stopTime);
+    }
 
     // Logging
     console.log(`🌊 Simulasi dimulai — durasi ${durationHours} jam, hujan ${rainMm} mm. Kenaikan & warna per-kecamatan mengikuti RRISE masing-masing.`);
@@ -257,6 +276,164 @@ export function startFloodSimulation(viewer, rainMm, durationHours, kecamatanNam
     console.error('Error dalam simulasi banjir:', error.message);
     throw error;
   }
+}
+
+/**
+ * Simulasi banjir per-kecamatan menggunakan curah hujan dari scheduler (BMKG)
+ * @param {Cesium.Viewer} viewer - Cesium viewer
+ * @param {number} durationHours - Durasi (jam), default 3 jam
+ * @param {Object} options - Opsi performa (opsional)
+ */
+export function startFloodSimulationPerKecamatan(viewer, durationHours = 3, options = {}) {
+  const performanceOptions = {
+    enableRainEffect: false,
+    enableDetailedLogging: false,
+    clockMultiplier: 60,
+    ...options
+  };
+
+  try {
+    // Jangan ubah rentang timeline agar tetap bisa melihat beberapa hari.
+    // Gunakan waktu clock saat ini sebagai acuan start animasi.
+    const now = viewer.clock.currentTime.clone();
+    viewer.clock.multiplier = performanceOptions.clockMultiplier;
+    viewer.clock.clockRange = Cesium.ClockRange.UNBOUNDED;
+
+    waterAnimationStartTime = now.clone();
+    isAnimatingWater = true;
+
+    // Ambil curah hujan aktif per kecamatan dari scheduler
+    const currentPrecMap = getCurrentPrecipitationMap(viewer);
+
+    // Terapkan animasi ke setiap entitas berdasarkan mm masing-masing
+    waterLevelEntities.forEach(entity => {
+      if (!entity?.polygon || !entity.historicalData) return;
+
+      const baseHeight = entity.historicalData.baseHeight;
+      const name = entity.historicalData.kecamatan;
+      const effectiveRainMm = currentPrecMap.get(name) || 0;
+
+      if (effectiveRainMm <= 0) {
+        // Tidak ada hujan untuk kecamatan ini saat ini; biarkan tetap di base height
+        entity.polygon.heightReference = Cesium.HeightReference.NONE;
+        entity.polygon.extrudedHeightReference = Cesium.HeightReference.NONE;
+        entity.polygon.height = baseHeight;
+        entity.polygon.extrudedHeight = baseHeight;
+        return;
+      }
+
+      const { riseRateMps, totalRiseM } = computeEntityDynamics(entity, effectiveRainMm, durationHours);
+
+      entity.polygon.heightReference = Cesium.HeightReference.NONE;
+      entity.polygon.extrudedHeightReference = Cesium.HeightReference.NONE;
+      entity.polygon.extrudedHeight = baseHeight;
+
+      const depthGetter = (time) => {
+        if (!isAnimatingWater || !waterAnimationStartTime) return 0;
+        const elapsed = Cesium.JulianDate.secondsDifference(time, waterAnimationStartTime);
+        return Math.min(Math.max(elapsed * riseRateMps, 0), totalRiseM);
+      };
+
+      entity.polygon.height = new Cesium.CallbackProperty(
+        (time) => baseHeight + depthGetter(time), false
+      );
+
+      entity.polygon.material = createDepthColorMaterial(depthGetter);
+
+      if (performanceOptions.enableDetailedLogging) {
+        console.log(`[SIM-PER-KEC] ${name}: rain=${effectiveRainMm} mm, rate=${riseRateMps.toFixed(4)} m/s, total=${totalRiseM.toFixed(2)} m`);
+      }
+    });
+
+    viewer.clock.shouldAnimate = true;
+    console.log(`🌊 Simulasi per-kecamatan dimulai — durasi ${durationHours} jam, curah hujan dari scheduler BMKG.`);
+
+  } catch (error) {
+    console.error('Error startFloodSimulationPerKecamatan:', error.message);
+    throw error;
+  }
+}
+
+/**
+ * Menjalankan simulasi banjir terjadwal per-kecamatan mengikuti interval prakiraan (mm > 0)
+ * - Tidak mengubah rentang timeline; hanya memasang CallbackProperty saat interval aktif
+ * - Setiap kecamatan berjalan 3 jam (default) sejak waktu interval aktif
+ * - Hanya kecamatan yang hujan yang disimulasikan
+ * @returns disposer function untuk melepas listener
+ */
+export function enableScheduledPerKecamatanFlood(viewer, durationHours = 3) {
+  const intervalsMap = getForecastIntervalsMap();
+  if (!intervalsMap || intervalsMap.size === 0) return () => {};
+
+  const activeByName = new Map(); // name -> { start: JulianDate, end: JulianDate, baseHeight, riseRateMps, totalRiseM }
+
+  const onTick = function(clock) {
+    const nowDate = Cesium.JulianDate.toDate(clock.currentTime);
+
+    waterLevelEntities.forEach(entity => {
+      if (!entity?.historicalData) return;
+      const name = entity.historicalData.kecamatan;
+      const baseHeight = entity.historicalData.baseHeight;
+      const intervals = intervalsMap.get(name);
+      if (!intervals || intervals.length === 0) return;
+
+      // Cari interval aktif (mm > 0)
+      let mm = 0;
+      for (let i = 0; i < intervals.length; i++) {
+        const iv = intervals[i];
+        if (iv.precipitation > 0 && nowDate >= iv.start && nowDate < iv.end) {
+          mm = Number(iv.precipitation || 0);
+          break;
+        }
+      }
+
+      const active = activeByName.get(name);
+
+      if (mm > 0) {
+        // Start jika belum aktif
+        if (!active || Cesium.JulianDate.greaterThan(clock.currentTime, active.end)) {
+          const start = clock.currentTime.clone();
+          const end = Cesium.JulianDate.addHours(start, durationHours, new Cesium.JulianDate());
+          const { riseRateMps, totalRiseM } = computeEntityDynamics(entity, mm, durationHours);
+
+          entity.polygon.heightReference = Cesium.HeightReference.NONE;
+          entity.polygon.extrudedHeightReference = Cesium.HeightReference.NONE;
+          entity.polygon.extrudedHeight = baseHeight;
+
+          const depthGetter = (time) => {
+            const elapsed = Cesium.JulianDate.secondsDifference(time, start);
+            return Math.min(Math.max(elapsed * riseRateMps, 0), totalRiseM);
+          };
+
+          entity.polygon.height = new Cesium.CallbackProperty(
+            (time) => baseHeight + depthGetter(time), false
+          );
+          entity.polygon.material = createDepthColorMaterial(depthGetter);
+
+          activeByName.set(name, { start, end, baseHeight, riseRateMps, totalRiseM });
+
+          // Logging start simulasi per kecamatan
+          try {
+            const hBaru = baseHeight + totalRiseM;
+            console.log(
+              `[START FLOOD] Kecamatan: ${name} | mm=${mm} | baseHeight=${baseHeight.toFixed(2)} m | ` +
+              `rate=${riseRateMps.toFixed(4)} m/s | totalRise≈${totalRiseM.toFixed(2)} m | HBaru≈${hBaru.toFixed(2)} m | durasi=${durationHours} jam`
+            );
+          } catch(_) { /* noop */ }
+        }
+      } else if (active) {
+        // Tidak ada hujan sekarang; jika masih aktif dan sudah lewat end, reset
+        if (Cesium.JulianDate.greaterThanOrEquals(clock.currentTime, active.end)) {
+          entity.polygon.height = active.baseHeight;
+          entity.polygon.extrudedHeight = active.baseHeight;
+          activeByName.delete(name);
+        }
+      }
+    });
+  };
+
+  viewer.clock.onTick.addEventListener(onTick);
+  return () => viewer.clock.onTick.removeEventListener(onTick);
 }
 
 /**

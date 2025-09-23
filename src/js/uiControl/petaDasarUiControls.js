@@ -1,6 +1,7 @@
 // src/js/petaDasarPageController.js
 import { getAggregatedForecastForKotaGorontalo } from '../fetch/bmkgAggregatedForecast.js';
 import { initRainForecastScheduler, updateRainForecastData } from '../forecast/rainForecastScheduler.js';
+import { startFloodSimulationPerKecamatan, enableScheduledPerKecamatanFlood } from '../simulationManager.js';
 
 let fetchedAggregatedData = null;
 
@@ -62,6 +63,15 @@ async function fetchAndPrepareAggregatedForecast(viewer) {
 
   // Dispatch custom event with fetched data
   window.dispatchEvent(new CustomEvent('updateForecastData', { detail: fetchedAggregatedData }));
+
+  // Aktifkan simulasi terjadwal per-kecamatan 3 jam mengikuti interval prakiraan (tanpa membatasi timeline)
+  try {
+    if (viewer) {
+      enableScheduledPerKecamatanFlood(viewer, 3 /* jam */);
+    }
+  } catch (e) {
+    console.warn('Gagal mengaktifkan simulasi banjir terjadwal per-kecamatan:', e);
+  }
 
   toggleLoading(false);
   return fetchedAggregatedData;
