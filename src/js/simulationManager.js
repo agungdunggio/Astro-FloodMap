@@ -377,24 +377,47 @@ export function enableScheduledPerKecamatanFlood(viewer, durationHours = 3) {
       const intervals = intervalsMap.get(name);
       if (!intervals || intervals.length === 0) return;
 
-      // Cari interval aktif (mm > 0)
-      let mm = 0;
+      // Cari interval aktif (mm > 0) dan blok beruntun berikutnya yang juga > 0
+      let activeIndex = -1;
       for (let i = 0; i < intervals.length; i++) {
         const iv = intervals[i];
         if (iv.precipitation > 0 && nowDate >= iv.start && nowDate < iv.end) {
-          mm = Number(iv.precipitation || 0);
+          activeIndex = i;
           break;
         }
       }
 
+      let maxMm = 0;
+      let blockStart = null;
+      let blockEnd = null;
+      if (activeIndex >= 0) {
+        blockStart = new Date(Math.max(nowDate.getTime(), intervals[activeIndex].start.getTime()));
+        // kumpulkan semua interval beruntun >0 dimulai dari activeIndex
+        let localMax = 0;
+        blockEnd = intervals[activeIndex].end;
+        for (let j = activeIndex; j < intervals.length; j++) {
+          const ivj = intervals[j];
+          if (ivj.precipitation > 0) {
+            const v = Number(ivj.precipitation || 0);
+            if (v > localMax) localMax = v;
+            blockEnd = ivj.end;
+          } else {
+            break;
+          }
+        }
+        maxMm = localMax;
+      }
+
       const active = activeByName.get(name);
 
-      if (mm > 0) {
+      if (maxMm > 0) {
         // Start jika belum aktif
         if (!active || Cesium.JulianDate.greaterThan(clock.currentTime, active.end)) {
           const start = clock.currentTime.clone();
-          const end = Cesium.JulianDate.addHours(start, durationHours, new Cesium.JulianDate());
-          const { riseRateMps, totalRiseM } = computeEntityDynamics(entity, mm, durationHours);
+          // durasi dinamis: gunakan panjang blok hujan beruntun (jam)
+          const dynamicHours = blockStart && blockEnd ? Math.max((blockEnd - blockStart) / 3600000, durationHours) : durationHours;
+          const end = Cesium.JulianDate.addHours(start, dynamicHours, new Cesium.JulianDate());
+          const { riseRateMps, totalRiseM } = computeEntityDynamics(entity, maxMm, dynamicHours);
 
           entity.polygon.heightReference = Cesium.HeightReference.NONE;
           entity.polygon.extrudedHeightReference = Cesium.HeightReference.NONE;
@@ -416,8 +439,9 @@ export function enableScheduledPerKecamatanFlood(viewer, durationHours = 3) {
           try {
             const hBaru = baseHeight + totalRiseM;
             console.log(
-              `[START FLOOD] Kecamatan: ${name} | mm=${mm} | baseHeight=${baseHeight.toFixed(2)} m | ` +
-              `rate=${riseRateMps.toFixed(4)} m/s | totalRise≈${totalRiseM.toFixed(2)} m | HBaru≈${hBaru.toFixed(2)} m | durasi=${durationHours} jam`
+              `[START FLOOD] Kecamatan: ${name} | maxMm=${maxMm.toFixed(2)} | baseHeight=${baseHeight.toFixed(1)} m | ` +
+              `rate=${riseRateMps.toFixed(5)} m/s | totalRise≈${totalRiseM.toFixed(5)} m | HBaru≈${hBaru.toFixed(5)} m | durasi=${(blockStart&&blockEnd)?(((blockEnd-blockStart)/3600000).toFixed(2)):dynamicHours} jam | ` +
+              `RiseCM = ${hBaru-baseHeight.toFixed(1)} cm`
             );
           } catch(_) { /* noop */ }
         }
