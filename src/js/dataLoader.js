@@ -276,6 +276,25 @@ export async function loadLabelLayer(viewer, layerType = 'kecamatan') {
 }
 
 /**
+ * Mengambil daftar centroid kecamatan dari file labelKecamatan.json
+ * @returns {Promise<Array<{ name: string, position: Cesium.Cartesian3 }>>}
+ */
+export async function getKecamatanCentroids() {
+  try {
+    const response = await fetch('/data/geojson/administrasi/labelKecamatan.json');
+    const labelData = await response.json();
+
+    return labelData.map((label) => ({
+      name: label.text,
+      position: Cesium.Cartesian3.fromDegrees(label.lon, label.lat, 200)
+    }));
+  } catch (error) {
+    console.error('Gagal mengambil centroid kecamatan:', error);
+    return [];
+  }
+}
+
+/**
  * Switch between kecamatan and kelurahan layers
  * @param {Cesium.Viewer} viewer 
  * @param {string} layerType - 'kecamatan' atau 'kelurahan'

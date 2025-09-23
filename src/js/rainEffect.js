@@ -104,18 +104,23 @@ export function addRainEffectForKecamatan(scene, kecamatanList) {
   removeRainEffectForKecamatan(scene);
 
   rainParticleSystems = kecamatanList.map(kec => {
+    // Sedikit jitter agar pusat emisi tidak tepat satu titik yang sama
+    const jitter = new Cesium.Cartesian3((Math.random() - 0.5) * 400.0, (Math.random() - 0.5) * 400.0, 0.0);
+    const center = Cesium.Cartesian3.add(kec.position, jitter, new Cesium.Cartesian3());
+
     const particleSystem = new Cesium.ParticleSystem({
-      modelMatrix: Cesium.Matrix4.fromTranslation(kec.position),
-      speed: 15.0,
-      lifetime: 1.5,
-      emitter: new Cesium.BoxEmitter(new Cesium.Cartesian3(500.0, 500.0, 500.0)),
-      startScale: 100.0,
-      endScale: 20.0,
+      modelMatrix: Cesium.Matrix4.fromTranslation(center),
+      speed: 14.0,
+      lifetime: 1.2,
+      // Perlebar area emisi agar tidak menumpuk di satu titik
+      emitter: new Cesium.BoxEmitter(new Cesium.Cartesian3(800.0, 800.0, 600.0)),
+      startScale: 60.0,
+      endScale: 15.0,
       image: '/data/img/particle_rain.png',
-      emissionRate: 1000.0,
-      startColor: Cesium.Color.WHITE.withAlpha(0.4),
-      endColor: Cesium.Color.WHITE.withAlpha(0.2),
-      imageSize: new Cesium.Cartesian2(1.0, 15.0),
+      emissionRate: 220.0,
+      startColor: Cesium.Color.WHITE.withAlpha(0.35),
+      endColor: Cesium.Color.WHITE.withAlpha(0.18),
+      imageSize: new Cesium.Cartesian2(1.0, 12.0),
     });
     scene.primitives.add(particleSystem);
     return particleSystem;

@@ -1,5 +1,6 @@
 // src/js/petaDasarPageController.js
 import { getAggregatedForecastForKotaGorontalo } from '../fetch/bmkgAggregatedForecast.js';
+import { initRainForecastScheduler, updateRainForecastData } from '../forecast/rainForecastScheduler.js';
 
 let fetchedAggregatedData = null;
 
@@ -28,7 +29,7 @@ function toggleLoading(show) {
 }
 
 // Fetch and prepare aggregated forecast data
-async function fetchAndPrepareAggregatedForecast() {
+async function fetchAndPrepareAggregatedForecast(viewer) {
   toggleLoading(true);
 
   console.log("Memulai pengambilan data prakiraan BMKG agregat (dari petaDasarPageController.js)...");
@@ -45,6 +46,15 @@ async function fetchAndPrepareAggregatedForecast() {
 
   if (aggregatedData && Object.keys(aggregatedData).length > 0) {
     fetchedAggregatedData = aggregatedData;
+    // Update scheduler agar hujan per-kecamatan mengikuti prakiraan
+    try {
+      if (viewer) {
+        await initRainForecastScheduler(viewer);
+      }
+      updateRainForecastData(fetchedAggregatedData);
+    } catch (e) {
+      console.warn('Gagal menginisialisasi scheduler hujan:', e);
+    }
   } else {
     fetchedAggregatedData = null;
     console.warn("Tidak ada data agregat yang valid diterima dari BMKG.");
@@ -58,13 +68,13 @@ async function fetchAndPrepareAggregatedForecast() {
 }
 
 // Initialize UI
-export function initializePetaDasarPageUI() {
+export function initializePetaDasarPageUI(viewer) {
   const openBtn = document.getElementById('openForecastBtn');
 
   if (openBtn) {
     openBtn.addEventListener('click', async () => {
       if (!fetchedAggregatedData) {
-        await fetchAndPrepareAggregatedForecast();
+        await fetchAndPrepareAggregatedForecast(viewer);
       } else {
         // Re-dispatch cached data
         window.dispatchEvent(new CustomEvent('updateForecastData', { detail: fetchedAggregatedData }));
