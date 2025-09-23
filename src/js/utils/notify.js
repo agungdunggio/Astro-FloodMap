@@ -97,7 +97,6 @@ export function updateToast(id, { text, type }) {
   if (!el) return;
   if (type) {
     el.style.background = bgFor(type);
-    el.style.borderColor = borderFor(type);
     el.style.color = fgFor(type);
     // replace spinner/icon when status berubah dari loading ke final
     const iconWrap = el.querySelector('.toast-icon');
