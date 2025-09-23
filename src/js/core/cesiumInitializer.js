@@ -83,7 +83,7 @@ async function initializeFeatures(viewer, features) {
   }
 
   if (features.petaDasarUI) {
-    initializePetaDasarPageUI();
+    initializePetaDasarPageUI(viewer);
   }
 
   if (features.lstmPrediction) {
