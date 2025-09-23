@@ -24,7 +24,7 @@ export const PAGE_CONFIGS = {
   BASE_MAP: {
     name: 'peta-dasar',
     dataLayers: [
-      { type: 'waterLevel', path: '/data/geojson/water/waterLevel.json' }
+      { type: 'waterLevel', path: '/data/geojson/water/kecamatan.json' }
     ],
     features: {
       simulation: false,
