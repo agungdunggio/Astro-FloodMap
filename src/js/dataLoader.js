@@ -4,7 +4,9 @@ import { WATER_COLORS } from './utils/colorUtils.js';
 import { KECAMATAN_BASE_HEIGHTS } from '../constants/baseHeightConstants.js';
 
 export let waterLevelEntities = [];
+const DEFAULT_LABEL_ALTITUDE = 200;
 // export const startHeight = -5;
+
 
 /**
  * Mendapatkan data historis dari entities yang sudah di-load
@@ -286,7 +288,7 @@ export async function getKecamatanCentroids() {
 
     return labelData.map((label) => ({
       name: label.text,
-      position: Cesium.Cartesian3.fromDegrees(label.lon, label.lat, 200)
+      position: Cesium.Cartesian3.fromDegrees(label.lon, label.lat, DEFAULT_LABEL_ALTITUDE)
     }));
   } catch (error) {
     console.error('Gagal mengambil centroid kecamatan:', error);

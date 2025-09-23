@@ -13,7 +13,7 @@ let schedulerState = {
 };
 
 function buildActiveSetKey(activeNames) {
-  return activeNames.slice().sort().join('|');
+  return activeNames.sort().join('|');
 }
 
 export async function initRainForecastScheduler(viewer) {
