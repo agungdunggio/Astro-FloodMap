@@ -10,6 +10,7 @@ import { initializeUIControls } from '../uiControl/uiControls.js';
 import { initializePetaDasarPageUI } from '../uiControl/petaDasarUiControls.js';
 import { initializeLayerControls } from '../uiControl/layerControls.js';
 import { initializeLegendControls } from '../uiControl/legendControls.js';
+import { initializeFloodLogControls } from '../uiControl/floodLogControls.js';
 
 import { PAGE_CONFIGS, LAYER_LOADERS } from '../config/pageConfigs.js';
 
@@ -72,6 +73,10 @@ async function initializeFeatures(viewer, features) {
 
   if (features.legendControls) {
     initializeLegendControls(viewer);
+  }
+
+  if (features.floodLogControls) {
+    initializeFloodLogControls(viewer);
   }
 
   if (features.clockEvents) {

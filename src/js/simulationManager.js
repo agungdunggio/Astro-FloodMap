@@ -435,14 +435,31 @@ export function enableScheduledPerKecamatanFlood(viewer, durationHours = 3) {
 
           activeByName.set(name, { start, end, baseHeight, riseRateMps, totalRiseM });
 
-          // Logging start simulasi per kecamatan
+          // Logging ke console & kirim ke UI tabel log
           try {
-            const hBaru = baseHeight + totalRiseM;
+            const riseM = totalRiseM;
+            const riseCm = riseM * 100;
+            const hBaru = baseHeight + riseM;
+            const durasiJam = (blockStart && blockEnd) ? ((blockEnd - blockStart) / 3600000) : dynamicHours;
+            const startDate = Cesium.JulianDate.toDate(start);
             console.log(
-              `[START FLOOD] Kecamatan: ${name} | maxMm=${maxMm.toFixed(2)} | baseHeight=${baseHeight.toFixed(1)} m | ` +
-              `rate=${riseRateMps.toFixed(5)} m/s | totalRise≈${totalRiseM.toFixed(5)} m | HBaru≈${hBaru.toFixed(5)} m | durasi=${(blockStart&&blockEnd)?(((blockEnd-blockStart)/3600000).toFixed(2)):dynamicHours} jam | ` +
-              `RiseCM = ${hBaru-baseHeight.toFixed(1)} cm`
+              `[START FLOOD] Kecamatan: ${name} | maxMm=${maxMm.toFixed(2)} | baseHeight=${baseHeight.toFixed(2)} m | ` +
+              `rate=${riseRateMps.toFixed(5)} m/s | riseM=${riseM.toFixed(5)} m | riseCm=${riseCm.toFixed(2)} cm | ` +
+              `HBaru=${hBaru.toFixed(5)} m | durasi=${durasiJam.toFixed(2)} jam | jam=${startDate.toLocaleString('id-ID')}`
             );
+
+            window.dispatchEvent(new CustomEvent('floodStartLog', {
+              detail: {
+                timestampIso: startDate.toISOString(),
+                name,
+                maxMm,
+                baseHeight,
+                riseM,
+                riseCm,
+                hBaru,
+                durationHours: durasiJam
+              }
+            }));
           } catch(_) { /* noop */ }
         }
       } else if (active) {
