@@ -74,16 +74,6 @@ function bgFor(type) {
   }
 }
 
-function borderFor(type) {
-  switch (type) {
-    case 'success': return 'rgba(22,163,74,0.9)';
-    case 'warning': return 'rgba(202,138,4,0.9)';
-    case 'error': return 'rgba(220,38,38,0.9)';
-    case 'info':
-    default: return 'rgba(37,99,235,0.9)';
-  }
-}
-
 function fgFor(type) {
   switch (type) {
     case 'warning': return '#111';
