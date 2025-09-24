@@ -8,6 +8,7 @@ import { loadWaterLevelGeoJson, loadAdminBoundaryGeoJson, addLabels } from '../d
 import { initializeSimulationClockEvents } from '../simulationManager.js';
 import { initializeUIControls } from '../uiControl/uiControls.js';
 import { initializePetaDasarPageUI } from '../uiControl/petaDasarUiControls.js';
+import { initializeLSTMUIControls } from '../uiControl/lstmControls.js';
 import { initializeLayerControls } from '../uiControl/layerControls.js';
 import { initializeLegendControls } from '../uiControl/legendControls.js';
 import { initializeFloodLogControls } from '../uiControl/floodLogControls.js';
@@ -92,8 +93,8 @@ async function initializeFeatures(viewer, features) {
   }
 
   if (features.lstmPrediction) {
-    // initializeLSTMPrediction(viewer); // TODO: Implement this
-    console.log('🧠 LSTM Prediction feature akan diaktifkan');
+    initializeLSTMUIControls(viewer);
+    console.log('🧠 LSTM Prediction feature diaktifkan');
   }
 
   if (features.charts) {
