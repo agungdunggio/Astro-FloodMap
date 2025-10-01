@@ -66,6 +66,24 @@ export function initializeLSTMUIControls(viewer) {
           viewer.clock.stopTime = stopTime;
           viewer.clock.clockRange = Cesium.ClockRange.UNBOUNDED;
           
+          // Cari jendela hujan pertama (prediksi dengan nilai > 0) dan arahkan currentTime ke jam 12:00 tanggal tsb
+          const firstWet = predictions.find(p => Number(p?.value || 0) > 0);
+          if (firstWet && firstWet.date) {
+            const firstWetDateLocalNoon = new Date(firstWet.date + 'T12:00:00');
+            const firstWetJulian = Cesium.JulianDate.fromDate(firstWetDateLocalNoon);
+            // Pastikan masih di dalam rentang yang sudah di-set
+            if (Cesium.JulianDate.greaterThanOrEquals(firstWetJulian, viewer.clock.startTime) && Cesium.JulianDate.lessThanOrEquals(firstWetJulian, viewer.clock.stopTime)) {
+              viewer.clock.currentTime = firstWetJulian.clone();
+            }
+          }
+          
+          // Aktifkan animasi agar onTick scheduler berjalan saat user scrub/biarkan play
+          viewer.clock.shouldAnimate = true;
+          // Multiplier sedang agar transisi terlihat namun tetap cepat menjangkau jendela berikutnya
+          if (!viewer.clock.multiplier || viewer.clock.multiplier < 60) {
+            viewer.clock.multiplier = 600; // 10 menit per detik
+          }
+          
           // Zoom timeline ke range yang sesuai
           viewer.timeline.zoomTo(startTime, stopTime);
           
