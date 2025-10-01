@@ -261,8 +261,8 @@ export function startFloodSimulation(viewer, rainMm, durationHours, kecamatanNam
       entity.polygon.material = createDepthColorMaterial(depthGetter);
     });
 
-    // Mulai dalam keadaan pause agar mudah di-scrub; user bisa tekan Play sendiri
-    viewer.clock.shouldAnimate = false;
+    // Mulai langsung berjalan agar simulasi otomatis berjalan tanpa perlu menekan Play
+    viewer.clock.shouldAnimate = true;
 
     // Zoom timeline agar menampilkan rentang penuh 3 hari
     if (viewer.timeline) {
