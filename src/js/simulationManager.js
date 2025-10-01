@@ -523,7 +523,7 @@ export function enableScheduledLSTMFlood(viewer, predictions = [], durationHours
   });
 
   const activeByName = new Map(); // key -> { start: JulianDate, end: JulianDate, baseHeight, riseRateMps, totalRiseM }
-  const loggedStartByName = new Map(); // key -> last start logged
+  const loggedKeys = new Set(); // key -> logged once per date
 
   const onTick = function(clock) {
     const now = clock.currentTime;
@@ -544,8 +544,9 @@ export function enableScheduledLSTMFlood(viewer, predictions = [], durationHours
       
       // Start jika belum aktif atau sudah lewat dari window sebelumnya
       if (!active || Cesium.JulianDate.greaterThan(now, active.end)) {
-        const start = now.clone();
-        const end = Cesium.JulianDate.addHours(start, durationHours, new Cesium.JulianDate());
+        // Gunakan start window tetap (12:00) agar scrub timeline konsisten
+        const start = currentWindow.start.clone();
+        const end = currentWindow.end.clone();
         
         // Gunakan entity pertama sebagai referensi untuk perhitungan global
         const referenceEntity = waterLevelEntities[0];
@@ -589,16 +590,14 @@ export function enableScheduledLSTMFlood(viewer, predictions = [], durationHours
 
         activeByName.set(currentWindow.key, { start, end, baseHeight, riseRateMps, totalRiseM });
 
-        // Logging ke console & kirim ke UI tabel log (hindari duplikat untuk event yang sama)
+        // Logging ke console & kirim ke UI tabel log (sekali saja per tanggal)
         try {
           const riseM = totalRiseM;
           const riseCm = riseM * 100;
           const hBaru = baseHeight + riseM;
           const startDate = Cesium.JulianDate.toDate(start);
-          const lastLoggedIso = loggedStartByName.get(currentWindow.key);
-          const thisIso = startDate.toISOString();
           
-          if (lastLoggedIso !== thisIso) {
+          if (!loggedKeys.has(currentWindow.key)) {
             console.log(
               `[START FLOOD LSTM] Date: ${currentWindow.key} | maxMm=${currentWindow.mm.toFixed(2)} | baseHeight=${baseHeight.toFixed(2)} m | ` +
               `rate=${riseRateMps.toFixed(5)} m/s | riseM=${riseM.toFixed(5)} m | riseCm=${riseCm.toFixed(2)} cm | ` +
@@ -607,7 +606,7 @@ export function enableScheduledLSTMFlood(viewer, predictions = [], durationHours
 
             window.dispatchEvent(new CustomEvent('floodStartLog', {
               detail: {
-                timestampIso: thisIso,
+                timestampIso: startDate.toISOString(),
                 name: 'GLOBAL (LSTM)',
                 maxMm: currentWindow.mm,
                 baseHeight,
@@ -617,7 +616,7 @@ export function enableScheduledLSTMFlood(viewer, predictions = [], durationHours
                 durationHours
               }
             }));
-            loggedStartByName.set(currentWindow.key, thisIso);
+            loggedKeys.add(currentWindow.key);
           }
         } catch(_) { /* noop */ }
       }
@@ -642,7 +641,6 @@ export function enableScheduledLSTMFlood(viewer, predictions = [], durationHours
           removeRainEffectForKecamatan(viewer.scene);
           
           activeByName.delete(key);
-          loggedStartByName.delete(key);
           console.log(`[LSTM] Menghentikan simulasi global untuk ${key}.`);
         }
       }
@@ -670,7 +668,7 @@ export function enableScheduledLSTMFlood(viewer, predictions = [], durationHours
     removeRainEffectForKecamatan(viewer.scene);
     
     activeByName.clear();
-    loggedStartByName.clear();
+    loggedKeys.clear();
     console.log("Scheduled LSTM flood simulation stopped.");
   };
 }
