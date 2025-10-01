@@ -2,7 +2,7 @@
 import * as Cesium from 'cesium';
 import { waterLevelEntities, resetWaterLevelToStatic, getHistoricalData, getAvailableKecamatan } from './dataLoader.js';
 import { getCurrentPrecipitationMap, getForecastIntervalsMap } from './forecast/rainForecastScheduler.js';
-import { addRainEffect, removeRainEffect, currentRainParticleSystem as rainSystemFromEffectModule } from './rainEffect.js';
+import { addRainEffect, removeRainEffect, removeRainEffectForKecamatan, currentRainParticleSystem as rainSystemFromEffectModule } from './rainEffect.js';
 import { createDepthColorMaterial } from './utils/colorUtils.js';
 
 export { getAvailableKecamatan };
@@ -261,8 +261,8 @@ export function startFloodSimulation(viewer, rainMm, durationHours, kecamatanNam
       entity.polygon.material = createDepthColorMaterial(depthGetter);
     });
 
-    // Mulai dalam keadaan pause agar mudah di-scrub; user bisa tekan Play sendiri
-    viewer.clock.shouldAnimate = false;
+    // Mulai langsung berjalan agar simulasi otomatis berjalan tanpa perlu menekan Play
+    viewer.clock.shouldAnimate = true;
 
     // Zoom timeline agar menampilkan rentang penuh 3 hari
     if (viewer.timeline) {
@@ -500,4 +500,177 @@ export function stopFloodSimulation(viewer) {
   resetWaterLevelToStatic();
 
   console.log("Simulasi banjir dihentikan dan air direset.");
+}
+
+/**
+ * Jadwalkan simulasi global berbasis prediksi LSTM harian.
+ * - predictions: Array<{ date: 'YYYY-MM-DD', value: number }>
+ * - Setiap hari, mulai pukul 12:00 (local) selama 6 jam (default)
+ * - Menjalankan startFloodSimulation(viewer, mm, durationHours)
+ * Mengembalikan disposer untuk melepas listener.
+ */
+export function enableScheduledLSTMFlood(viewer, predictions = [], durationHours = 6) {
+  if (!Array.isArray(predictions) || predictions.length === 0) {
+    return () => {};
+  }
+
+  // Precompute schedule windows in local time
+  const windows = predictions.map(p => {
+    const d = new Date(p.date + 'T12:00:00');
+    const start = Cesium.JulianDate.fromDate(d);
+    const end = Cesium.JulianDate.addHours(start, durationHours, new Cesium.JulianDate());
+    return { start, end, mm: Number(p.value || 0), key: p.date };
+  });
+
+  const activeByName = new Map(); // key -> { start: JulianDate, end: JulianDate, baseHeight, riseRateMps, totalRiseM }
+  const loggedStartByName = new Map(); // key -> last start logged
+
+  const onTick = function(clock) {
+    const now = clock.currentTime;
+    
+    // Cek apakah ada window yang aktif sekarang
+    let currentWindow = null;
+    for (let i = 0; i < windows.length; i++) {
+      const w = windows[i];
+      const inWindow = Cesium.JulianDate.greaterThanOrEquals(now, w.start) && Cesium.JulianDate.lessThan(now, w.end);
+      if (inWindow && w.mm > 0) {
+        currentWindow = w;
+        break;
+      }
+    }
+
+    if (currentWindow) {
+      const active = activeByName.get(currentWindow.key);
+      
+      // Start jika belum aktif atau sudah lewat dari window sebelumnya
+      if (!active || Cesium.JulianDate.greaterThan(now, active.end)) {
+        const start = now.clone();
+        const end = Cesium.JulianDate.addHours(start, durationHours, new Cesium.JulianDate());
+        
+        // Gunakan entity pertama sebagai referensi untuk perhitungan global
+        const referenceEntity = waterLevelEntities[0];
+        if (!referenceEntity?.historicalData) return;
+        
+        const baseHeight = referenceEntity.historicalData.baseHeight;
+        const { riseRateMps, totalRiseM } = computeEntityDynamics(referenceEntity, currentWindow.mm, durationHours);
+
+        // Terapkan ke semua entities (global simulation)
+        waterLevelEntities.forEach(entity => {
+          if (!entity?.polygon || !entity.historicalData) return;
+          
+          const entityBaseHeight = entity.historicalData.baseHeight;
+          
+          entity.polygon.heightReference = Cesium.HeightReference.NONE;
+          entity.polygon.extrudedHeightReference = Cesium.HeightReference.NONE;
+          entity.polygon.extrudedHeight = entityBaseHeight;
+
+          const depthGetter = (time) => {
+            const elapsed = Cesium.JulianDate.secondsDifference(time, start);
+            return Math.min(Math.max(elapsed * riseRateMps, 0), totalRiseM);
+          };
+
+          entity.polygon.height = new Cesium.CallbackProperty(
+            (time) => entityBaseHeight + depthGetter(time), false
+          );
+          entity.polygon.material = createDepthColorMaterial(depthGetter);
+        });
+
+        // Set interval hujan untuk clock events
+        rainEventStartJulianDate = start.clone();
+        rainEventEndJulianDate = end.clone();
+        
+        // Aktifkan efek hujan global (hentikan hujan per-kecamatan dulu)
+        removeRainEffectForKecamatan(viewer.scene);
+        removeRainEffect(viewer.scene);
+        // Delay sedikit untuk memastikan remove selesai
+        setTimeout(() => {
+          addRainEffect(viewer.scene);
+        }, 100);
+
+        activeByName.set(currentWindow.key, { start, end, baseHeight, riseRateMps, totalRiseM });
+
+        // Logging ke console & kirim ke UI tabel log (hindari duplikat untuk event yang sama)
+        try {
+          const riseM = totalRiseM;
+          const riseCm = riseM * 100;
+          const hBaru = baseHeight + riseM;
+          const startDate = Cesium.JulianDate.toDate(start);
+          const lastLoggedIso = loggedStartByName.get(currentWindow.key);
+          const thisIso = startDate.toISOString();
+          
+          if (lastLoggedIso !== thisIso) {
+            console.log(
+              `[START FLOOD LSTM] Date: ${currentWindow.key} | maxMm=${currentWindow.mm.toFixed(2)} | baseHeight=${baseHeight.toFixed(2)} m | ` +
+              `rate=${riseRateMps.toFixed(5)} m/s | riseM=${riseM.toFixed(5)} m | riseCm=${riseCm.toFixed(2)} cm | ` +
+              `HBaru=${hBaru.toFixed(5)} m | durasi=${durationHours} jam | jam=${startDate.toLocaleString('id-ID')}`
+            );
+
+            window.dispatchEvent(new CustomEvent('floodStartLog', {
+              detail: {
+                timestampIso: thisIso,
+                name: 'GLOBAL (LSTM)',
+                maxMm: currentWindow.mm,
+                baseHeight,
+                riseM,
+                riseCm,
+                hBaru,
+                durationHours
+              }
+            }));
+            loggedStartByName.set(currentWindow.key, thisIso);
+          }
+        } catch(_) { /* noop */ }
+      }
+    } else {
+      // Tidak ada window aktif; reset semua yang sudah lewat
+      for (const [key, active] of activeByName.entries()) {
+        if (Cesium.JulianDate.greaterThanOrEquals(now, active.end)) {
+          // Reset semua entities ke base height
+          waterLevelEntities.forEach(entity => {
+            if (entity?.polygon && entity.historicalData) {
+              entity.polygon.height = entity.historicalData.baseHeight;
+              entity.polygon.extrudedHeight = entity.historicalData.baseHeight;
+            }
+          });
+          
+          // Reset interval hujan
+          rainEventStartJulianDate = null;
+          rainEventEndJulianDate = null;
+          
+          // Hentikan efek hujan
+          removeRainEffect(viewer.scene);
+          removeRainEffectForKecamatan(viewer.scene);
+          
+          activeByName.delete(key);
+          loggedStartByName.delete(key);
+          console.log(`[LSTM] Menghentikan simulasi global untuk ${key}.`);
+        }
+      }
+    }
+  };
+
+  viewer.clock.onTick.addEventListener(onTick);
+  return () => {
+    viewer.clock.onTick.removeEventListener(onTick);
+    
+    // Reset semua entities ke base height
+    waterLevelEntities.forEach(entity => {
+      if (entity?.polygon && entity.historicalData) {
+        entity.polygon.height = entity.historicalData.baseHeight;
+        entity.polygon.extrudedHeight = entity.historicalData.baseHeight;
+      }
+    });
+    
+    // Reset interval hujan
+    rainEventStartJulianDate = null;
+    rainEventEndJulianDate = null;
+    
+    // Hentikan efek hujan
+    removeRainEffect(viewer.scene);
+    removeRainEffectForKecamatan(viewer.scene);
+    
+    activeByName.clear();
+    loggedStartByName.clear();
+    console.log("Scheduled LSTM flood simulation stopped.");
+  };
 }

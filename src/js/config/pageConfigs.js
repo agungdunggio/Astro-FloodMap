@@ -43,12 +43,12 @@ export const PAGE_CONFIGS = {
   LSTM_PREDICTION: {
     name: 'prediksi-lstm',
     dataLayers: [
-      { type: 'waterLevel', path: '/data/geojson/water/waterLevel.json' }
+      { type: 'waterLevel', path: '/data/geojson/water/kecamatan.json' }
     ],
     features: {
       simulation: false,
       uiControls: false,
-      clockEvents: false,
+      clockEvents: true,
       labels: true,
       floodLogControls: true,
       lstmPrediction: true,  // 🧠 Fitur prediksi LSTM
