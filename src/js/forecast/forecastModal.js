@@ -17,22 +17,28 @@ if (modal) {
   });
 }
 
-if (reloadBtn) {
-  reloadBtn.addEventListener('click', async () => {
-    try {
+window.addEventListener('requestReloadForecast', async () => {
+  try {
+    if (reloadBtn) {
       reloadBtn.disabled = true;
       reloadBtn.dataset.originalText = reloadBtn.innerText;
       reloadBtn.innerText = 'Memuat...';
-      const freshData = await getAggregatedForecastForKotaGorontalo();
-      window.dispatchEvent(new CustomEvent('updateForecastData', { detail: freshData }));
-    } catch (err) {
-      console.error('Gagal memuat ulang prakiraan:', err);
-    } finally {
+    }
+
+    const freshData = await getAggregatedForecastForKotaGorontalo();
+
+    // kirim data baru ke modal
+    window.dispatchEvent(new CustomEvent('updateForecastData', { detail: freshData }));
+  } catch (err) {
+    console.error('Gagal memuat ulang prakiraan:', err);
+  } finally {
+    if (reloadBtn) {
       reloadBtn.disabled = false;
       if (reloadBtn.dataset.originalText) reloadBtn.innerText = reloadBtn.dataset.originalText;
     }
-  });
-}
+  }
+});
+
 
 window.addEventListener('updateForecastData', (event) => {
   const aggregatedData = event.detail;

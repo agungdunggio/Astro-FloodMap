@@ -4,7 +4,7 @@
       <div class="modal-header">
         <h4>Prakiraan Cuaca Agregat (Kota Gorontalo)</h4>
         <div class="header-actions">
-          <button class="reload-btn" :disabled="isReloading" aria-label="Muat ulang data" @click="reloadForecast">
+          <button id="reloadForecastBtn" class="reload-btn" :disabled="isReloading" aria-label="Muat ulang data" @click="reloadForecast">
             <svg v-if="!isReloading" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="23 4 23 10 17 10"/>
               <polyline points="1 20 1 14 7 14"/>
