@@ -328,6 +328,58 @@ html, body {
   align-self: flex-start;
 }
 
+/* Historical Data Section */
+.historical-data-section {
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  padding-top: 12px;
+  margin-top: 8px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 10px;
+}
+
+.section-header ion-icon {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.section-badge {
+  font-size: 8px;
+  color: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2px 6px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-left: auto;
+}
+
+.historical-info {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+  margin-bottom: 4px;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.info-item ion-icon {
+  font-size: 12px;
+}
+
 .button-row button {
   flex: 1;
   padding: 10px 16px;

@@ -21,19 +21,26 @@ import BaseLayout from '../layouts/BaseLayout.astro';
             </div>
         </div>
 
-        <!-- Field Tanggal (Opsional) - Auto-fill curah hujan -->
-        <div class="input-row input-row--single">
-            <div class="input-group input-group--date">
-                <label for="dateSelect"><ion-icon name="calendar-outline"></ion-icon> Pilih Tanggal (Opsional):</label>
-                <div class="date-input-wrapper">
-                    <input type="date" id="dateSelect">
-                    <button type="button" id="clearDate" class="clear-date-btn" title="Hapus tanggal">
-                        <ion-icon name="close-outline"></ion-icon>
-                    </button>
+        <!-- Data Historis (Opsional) - Auto-fill curah hujan -->
+        <div class="historical-data-section">
+            <div class="section-header">
+                <ion-icon name="archive-outline"></ion-icon>
+                <span>Data Historis</span>
+                <span class="section-badge">Opsional</span>
+            </div>
+            <div class="input-row input-row--single">
+                <div class="input-group input-group--date">
+                    <label for="dateSelect"><ion-icon name="calendar-outline"></ion-icon> Pilih Tanggal:</label>
+                    <div class="date-input-wrapper">
+                        <input type="date" id="dateSelect">
+                        <button type="button" id="clearDate" class="clear-date-btn" title="Hapus tanggal">
+                            <ion-icon name="close-outline"></ion-icon>
+                        </button>
+                    </div>
                 </div>
             </div>
+            <span class="input-hint" id="dateHint">Pilih tanggal untuk auto-fill dari data historis</span>
         </div>
-        <span class="input-hint" id="dateHint">Pilih tanggal untuk auto-fill curah hujan</span>
         
         <div class="button-row">
           <button id="applyRain"><ion-icon name="play"></ion-icon> Mulai Simulasi</button>
