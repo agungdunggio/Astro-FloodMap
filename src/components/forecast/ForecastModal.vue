@@ -3,10 +3,48 @@
     <div class="modal-content">
       <div class="modal-header">
         <h4>Prakiraan Cuaca Agregat (Kota Gorontalo)</h4>
-        <button id="closeModalBtn" class="close-btn" aria-label="Tutup Modal" @click="closeModal">×</button>
+        <div class="header-actions">
+          <button id="reloadForecastBtn" class="reload-btn" :disabled="isReloading" aria-label="Muat ulang data" @click="reloadForecast">
+            <svg v-if="!isReloading" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="23 4 23 10 17 10"/>
+              <polyline points="1 20 1 14 7 14"/>
+              <path d="M3.51 9a9 9 0 0 1 14.86-3.36L23 10"/>
+              <path d="M20.49 15a9 9 0 0 1-14.86 3.36L1 14"/>
+            </svg>
+            <svg v-else class="spin" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2v4"/>
+              <path d="M12 18v4"/>
+              <path d="M4.93 4.93l2.83 2.83"/>
+              <path d="M16.24 16.24l2.83 2.83"/>
+              <path d="M2 12h4"/>
+              <path d="M18 12h4"/>
+              <path d="M4.93 19.07l2.83-2.83"/>
+              <path d="M16.24 7.76l2.83-2.83"/>
+            </svg>
+          </button>
+          <button id="closeModalBtn" class="close-btn" aria-label="Tutup Modal" @click="closeModal">×</button>
+        </div>
       </div>
       <div id="bmkgAggregatedForecastContent" class="modal-body kecamatan-scroll overflow-x-scroll">
-        <div v-if="Object.keys(forecasts).length > 0" class="forecast-row-horizontal">
+        <!-- Skeleton saat reload -->
+        <div v-if="isReloading" class="forecast-row-horizontal">
+          <div class="kecamatan-forecast-block" v-for="n in 3" :key="`skel-sec-${n}`">
+            <div class="skeleton-title shimmer"></div>
+            <div class="forecast-row">
+              <div class="forecast-card skeleton" v-for="m in 6" :key="`skel-card-${n}-${m}`">
+                <div class="skeleton-label shimmer"></div>
+                <div class="skeleton-icon shimmer"></div>
+                <div class="forecast-bottom-row">
+                  <span class="skeleton-chip shimmer"></span>
+                  <span class="forecast-slash"> / </span>
+                  <span class="skeleton-chip shimmer"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div v-else-if="Object.keys(forecasts).length > 0" class="forecast-row-horizontal">
           <div
             class="kecamatan-forecast-block"
             v-for="[kecamatanKey, dataKecamatan] in Object.entries(forecasts)"
@@ -46,6 +84,7 @@
 
 <script>
 import { defineComponent, ref, onMounted } from 'vue';
+import { getAggregatedForecastForKotaGorontalo } from '../../js/fetch/bmkgAggregatedForecast.js';
 
 export default defineComponent({
   name: 'ForecastModal',
@@ -58,6 +97,7 @@ export default defineComponent({
   setup(props) {
     const forecasts = ref(props.aggregatedData || {});
     const isModalVisible = ref(false);
+    const isReloading = ref(false);
 
     const formatDateTime = (dateTime) => {
       const localDateTime = typeof dateTime === 'string' ? new Date(dateTime) : dateTime;
@@ -72,11 +112,24 @@ export default defineComponent({
       isModalVisible.value = false;
     };
 
+    const reloadForecast = async () => {
+      try {
+        isReloading.value = true;
+        // Delegasikan reload ke controller agar semua state (scheduler & simulasi) ter-reset
+        window.dispatchEvent(new CustomEvent('requestReloadForecast'));
+      } catch (e) {
+        console.error('Gagal memuat ulang prakiraan:', e);
+        isReloading.value = false;
+      }
+    };
+
     onMounted(() => {
       // Listener untuk event updateForecastData
       window.addEventListener('updateForecastData', (event) => {
         forecasts.value = event.detail || {};
         isModalVisible.value = true;
+        // Selesai reload
+        isReloading.value = false;
       });
 
       // Listener untuk klik di luar modal
@@ -93,8 +146,10 @@ export default defineComponent({
     return {
       forecasts,
       isModalVisible,
+      isReloading,
       formatDateTime,
       closeModal,
+      reloadForecast,
     };
   },
   directives: {
@@ -132,6 +187,96 @@ export default defineComponent({
 </script>
 
 <style scoped>
+.header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+}
+
+.reload-btn {
+  background: transparent;
+  border: none;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #1e3a8a;
+  padding: 0;
+  border-radius: 12px;
+  transition: background 0.15s ease, transform 0.1s, opacity 0.2s;
+  line-height: 1;
+  margin: 0;
+}
+
+.reload-btn:hover:not(:disabled) {
+  background: rgba(30, 58, 138, 0.08);
+}
+
+.reload-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.reload-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Skeleton styles */
+.skeleton { background: rgba(255,255,255,0.6); }
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0) 100%);
+  transform: translateX(-100%);
+  animation: shimmer 1.2s infinite;
+}
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
+.skeleton-title {
+  width: 200px;
+  height: 20px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  background: rgba(148,163,184,0.25);
+}
+.skeleton-label {
+  width: 100px;
+  height: 16px;
+  border-radius: 8px;
+  background: rgba(148,163,184,0.25);
+}
+.skeleton-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  margin: 12px 0;
+  background: rgba(148,163,184,0.25);
+}
+.skeleton-chip {
+  display: inline-block;
+  width: 56px;
+  height: 20px;
+  border-radius: 12px;
+  background: rgba(148,163,184,0.25);
+}
 .modal {
   display: none;
   position: fixed;
@@ -186,23 +331,25 @@ export default defineComponent({
 .close-btn {
   background: none;
   border: none;
-  font-size: 1.8rem;
+  font-size: 20px;
   cursor: pointer;
   color: #1e3a8a;
   font-weight: 600;
   transition: color 0.2s;
-  padding: 8px;
-  border-radius: 50%;
+  padding: 0;
+  border-radius: 12px;
   width: 40px;
   height: 40px;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  line-height: 1;
+  margin: 0;
 }
 
 .close-btn:hover {
   color: #dc2626;
-  background: rgba(220, 38, 38, 0.1);
+  background: rgba(220, 38, 38, 0.08);
 }
 
 .modal-body.kecamatan-scroll {

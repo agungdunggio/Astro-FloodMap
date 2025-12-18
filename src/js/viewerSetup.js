@@ -21,12 +21,12 @@ export async function createViewer() {
     // creditContainer: document.createElement("div"),
   });
 
-  try {
-    const osmBuildingsTileset = await Cesium.createOsmBuildingsAsync();
-    viewer.scene.primitives.add(osmBuildingsTileset);
-  } catch (error) {
-    console.error("Gagal memuat OSM Buildings:", error);
-  }
+  // try {
+  //   const osmBuildingsTileset = await Cesium.createOsmBuildingsAsync();
+  //   viewer.scene.primitives.add(osmBuildingsTileset);
+  // } catch (error) {
+  //   console.error("Gagal memuat OSM Buildings:", error);
+  // }
 
   const scene = viewer.scene;
   scene.globe.depthTestAgainstTerrain = true;

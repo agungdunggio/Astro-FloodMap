@@ -1,9 +1,8 @@
-// src/js/bmkgAggregatedForecast.js
+import { showLoadingToast, successToast, warningToast, errorToast } from '../utils/notify.js';
 
-// Struktur data wilayah (GANTI DENGAN DATA SEBENARNYA)
 const KOTA_GORONTALO_STRUCTURE = {
     "Kota Tengah": {
-        namaResmi: "Kecamatan Kota Tengah", // Nama yang akan ditampilkan
+        namaResmi: "Kecamatan Kota Tengah",
         adm4_codes: ["75.71.06.1001", "75.71.06.1002", "75.71.06.1003", "75.71.06.1004", "75.71.06.1005", "75.71.06.1006"]
     },
     "Kota Barat": {
@@ -56,12 +55,11 @@ async function fetchForecastForSingleAdm4(adm4Code) {
         }
         const jsonData = await response.json();
         if (jsonData && jsonData.data && jsonData.data.length > 0 && jsonData.data[0].cuaca) {
-            // Menggabungkan semua array prakiraan menjadi satu array flat
             let flatForecasts = [];
             jsonData.data[0].cuaca.forEach(dailyArray => {
                 flatForecasts = flatForecasts.concat(dailyArray);
             });
-            return flatForecasts.map(item => ({ // Ambil field yang relevan
+            return flatForecasts.map(item => ({ 
                 localDateTime: new Date(item.local_datetime),
                 temperature: parseFloat(item.t),
                 totalPrecipitation: parseFloat(item.tp),
@@ -126,7 +124,7 @@ function aggregateForecastsForKecamatan(allKelurahanForecasts) {
         aggregatedData.push({
             localDateTime: forecastsForThisInterval[0].localDateTime, // Ambil dari yang pertama
             temperature: parseFloat(avgTemp.toFixed(1)),
-            totalPrecipitation: parseFloat(maxPrecipitation.toFixed(1)), // Atau avgPrecipitation
+            totalPrecipitation: parseFloat(maxPrecipitation.toFixed(1)),
             weatherCode: dominantWeatherCode,
             weatherDesc: dominantWeatherDesc,
             iconUrl: dominantIconUrl,
@@ -145,10 +143,12 @@ function aggregateForecastsForKecamatan(allKelurahanForecasts) {
  */
 export async function getAggregatedForecastForKotaGorontalo() {
     const allKecamatanData = {};
+    const makeId = (key) => `fetch-${key.replace(/\s+/g,'-').toLowerCase()}`;
 
     for (const kecamatanKey in KOTA_GORONTALO_STRUCTURE) {
         const kecamatanInfo = KOTA_GORONTALO_STRUCTURE[kecamatanKey];
-        console.log(`Mengambil data untuk ${kecamatanInfo.namaResmi}...`);
+        // Trigger toast loading per kecamatan
+        showLoadingToast(makeId(kecamatanKey), `Memuat ${kecamatanInfo.namaResmi}...`);
         const kelurahanForecastsPromises = kecamatanInfo.adm4_codes.map(adm4 => fetchForecastForSingleAdm4(adm4));
         
         try {
@@ -162,16 +162,17 @@ export async function getAggregatedForecastForKotaGorontalo() {
                         namaResmi: kecamatanInfo.namaResmi,
                         forecasts: aggregated
                     };
+                    successToast(makeId(kecamatanKey), `${kecamatanInfo.namaResmi} berhasil`);
                 } else {
-                    console.warn(`Tidak ada data valid untuk diagregasi di ${kecamatanInfo.namaResmi}`);
+                    warningToast(makeId(kecamatanKey), `${kecamatanInfo.namaResmi}: tidak ada data valid`);
                     allKecamatanData[kecamatanKey] = { namaResmi: kecamatanInfo.namaResmi, forecasts: [] };
                 }
             } else {
-                console.warn(`Tidak ada data yang berhasil diambil untuk ${kecamatanInfo.namaResmi}`);
+                warningToast(makeId(kecamatanKey), `${kecamatanInfo.namaResmi}: semua request kosong`);
                 allKecamatanData[kecamatanKey] = { namaResmi: kecamatanInfo.namaResmi, forecasts: [] };
             }
         } catch (error) {
-            console.error(`Error saat memproses kecamatan ${kecamatanInfo.namaResmi}:`, error);
+            errorToast(makeId(kecamatanKey), `${kecamatanInfo.namaResmi}: gagal`);
             allKecamatanData[kecamatanKey] = { namaResmi: kecamatanInfo.namaResmi, forecasts: [] };
         }
         // Tambahkan delay kecil untuk menghindari rate limit API jika mengambil banyak kecamatan sekaligus

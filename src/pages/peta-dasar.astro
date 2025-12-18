@@ -11,7 +11,7 @@ import ForecastModal from '../components/forecast/ForecastModal.vue';
 //   console.error('Gagal mengambil data BMKG:', error);
 // }
 ---
-<BaseLayout title="Peta Dasar Gorontalo & Prakiraan Cuaca Agregat - Simulasi Banjir">
+<BaseLayout title="Integrasi API BMKG | Simulasi Banjir">
   <main>  
     {/* Kontainer untuk Cesium Viewer */}
     <div id="cesiumContainer"></div>
@@ -46,7 +46,7 @@ import ForecastModal from '../components/forecast/ForecastModal.vue';
       
       // Initialize dengan error handling yang lebih baik
       // Note: initializePetaDasarPageUI sudah dipanggil di dalam initializeBaseMap
-      initializePage(initializeBaseMap, 'Peta Dasar Gorontalo');
+      initializePage(initializeBaseMap, 'G_Flood | Integrasi API BMKG');
     </script>
     
     <style>@import '../style/peta-dasar-style.css';</style>

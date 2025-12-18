@@ -8,7 +8,7 @@
 export { 
   initializeCesiumApp, 
   initializeBaseMap, 
-  initializeCesiumPage 
+  initializeLSTMPage 
 } from './core/cesiumInitializer.js';
 
 /**

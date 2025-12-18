@@ -1,5 +1,8 @@
 // src/js/petaDasarPageController.js
 import { getAggregatedForecastForKotaGorontalo } from '../fetch/bmkgAggregatedForecast.js';
+import { initRainForecastScheduler, updateRainForecastData } from '../forecast/rainForecastScheduler.js';
+import { startFloodSimulationPerKecamatan, enableScheduledPerKecamatanFlood } from '../simulationManager.js';
+import { showLoadingToast, successToast, warningToast, errorToast } from '../utils/notify.js';
 
 let fetchedAggregatedData = null;
 
@@ -28,10 +31,10 @@ function toggleLoading(show) {
 }
 
 // Fetch and prepare aggregated forecast data
-async function fetchAndPrepareAggregatedForecast() {
+async function fetchAndPrepareAggregatedForecast(viewer) {
   toggleLoading(true);
 
-  console.log("Memulai pengambilan data prakiraan BMKG agregat (dari petaDasarPageController.js)...");
+  // console.log("Memulai pengambilan data prakiraan BMKG agregat (dari petaDasarPageController.js)...");
   const aggregatedData = await getAggregatedForecastForKotaGorontalo();
 
   try {
@@ -45,26 +48,45 @@ async function fetchAndPrepareAggregatedForecast() {
 
   if (aggregatedData && Object.keys(aggregatedData).length > 0) {
     fetchedAggregatedData = aggregatedData;
+    // Update scheduler agar hujan per-kecamatan mengikuti prakiraan
+    try {
+      if (viewer) {
+        await initRainForecastScheduler(viewer);
+      }
+      updateRainForecastData(fetchedAggregatedData);
+    } catch (e) {
+      console.warn('Gagal menginisialisasi scheduler hujan:', e);
+    }
   } else {
     fetchedAggregatedData = null;
-    console.warn("Tidak ada data agregat yang valid diterima dari BMKG.");
+    warningToast('bmkg-fetch', 'Tidak ada data valid dari BMKG');
   }
 
   // Dispatch custom event with fetched data
   window.dispatchEvent(new CustomEvent('updateForecastData', { detail: fetchedAggregatedData }));
+
+  // Aktifkan simulasi terjadwal per-kecamatan 3 jam mengikuti interval prakiraan (tanpa membatasi timeline)
+  try {
+    if (viewer) {
+      enableScheduledPerKecamatanFlood(viewer, 3 /* jam */);
+    }
+  } catch (e) {
+    warningToast('bmkg-fetch', 'Gagal mengaktifkan simulasi terjadwal');
+  }
 
   toggleLoading(false);
   return fetchedAggregatedData;
 }
 
 // Initialize UI
-export function initializePetaDasarPageUI() {
+export function initializePetaDasarPageUI(viewer) {
   const openBtn = document.getElementById('openForecastBtn');
+  let disposeScheduled = null;
 
   if (openBtn) {
     openBtn.addEventListener('click', async () => {
       if (!fetchedAggregatedData) {
-        await fetchAndPrepareAggregatedForecast();
+        await fetchAndPrepareAggregatedForecast(viewer);
       } else {
         // Re-dispatch cached data
         window.dispatchEvent(new CustomEvent('updateForecastData', { detail: fetchedAggregatedData }));
@@ -72,6 +94,30 @@ export function initializePetaDasarPageUI() {
     });
   }
 
+  // Listener untuk reload dari modal: reset scheduler & simulasi lalu fetch ulang
+  window.addEventListener('requestReloadForecast', async () => {
+    try {
+      // Reset state simulasi (tinggikan air ke base) tanpa mengubah rentang timeline
+      if (viewer) {
+        // Bersihkan pendengar simulasi terjadwal sebelumnya jika ada
+        if (typeof disposeScheduled === 'function') {
+          disposeScheduled();
+          disposeScheduled = null;
+        }
+      }
+      // Bersihkan tabel log flood
+      window.dispatchEvent(new CustomEvent('clearFloodLog'));
+      await fetchAndPrepareAggregatedForecast(viewer);
+      if (viewer) {
+        disposeScheduled = enableScheduledPerKecamatanFlood(viewer, 3);
+      }
+    } catch (e) {
+      console.warn('Gagal reload prakiraan & reset simulasi:', e);
+    }
+  });
+
   console.log("UI Controller untuk Peta Dasar (modal BMKG) telah diinisialisasi.");
 }
+
+// Hapus helper event-based (sudah pakai notify.js langsung)
 

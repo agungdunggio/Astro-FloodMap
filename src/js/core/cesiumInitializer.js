@@ -8,7 +8,10 @@ import { loadWaterLevelGeoJson, loadAdminBoundaryGeoJson, addLabels } from '../d
 import { initializeSimulationClockEvents } from '../simulationManager.js';
 import { initializeUIControls } from '../uiControl/uiControls.js';
 import { initializePetaDasarPageUI } from '../uiControl/petaDasarUiControls.js';
+import { initializeLSTMUIControls } from '../uiControl/lstmControls.js';
 import { initializeLayerControls } from '../uiControl/layerControls.js';
+import { initializeLegendControls } from '../uiControl/legendControls.js';
+import { initializeFloodLogControls } from '../uiControl/floodLogControls.js';
 
 import { PAGE_CONFIGS, LAYER_LOADERS } from '../config/pageConfigs.js';
 
@@ -69,6 +72,14 @@ async function initializeFeatures(viewer, features) {
     initializeLayerControls(viewer);
   }
 
+  if (features.legendControls) {
+    initializeLegendControls(viewer);
+  }
+
+  if (features.floodLogControls) {
+    initializeFloodLogControls(viewer);
+  }
+
   if (features.clockEvents) {
     initializeSimulationClockEvents(viewer);
   }
@@ -78,12 +89,12 @@ async function initializeFeatures(viewer, features) {
   }
 
   if (features.petaDasarUI) {
-    initializePetaDasarPageUI();
+    initializePetaDasarPageUI(viewer);
   }
 
   if (features.lstmPrediction) {
-    // initializeLSTMPrediction(viewer); // TODO: Implement this
-    console.log('🧠 LSTM Prediction feature akan diaktifkan');
+    initializeLSTMUIControls(viewer);
+    console.log('🧠 LSTM Prediction feature diaktifkan');
   }
 
   if (features.charts) {

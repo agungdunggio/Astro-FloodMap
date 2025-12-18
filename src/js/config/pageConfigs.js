@@ -15,7 +15,8 @@ export const PAGE_CONFIGS = {
       uiControls: true,
       clockEvents: true,
       labels: true,
-      layerControls: true
+      layerControls: true,
+      legendControls: true
     },
     logMessage: 'Aplikasi CesiumJS Simulasi Banjir berhasil diinisialisasi.'
   },
@@ -23,15 +24,17 @@ export const PAGE_CONFIGS = {
   BASE_MAP: {
     name: 'peta-dasar',
     dataLayers: [
-      { type: 'waterLevel', path: '/data/geojson/water/waterLevel.json' }
+      { type: 'waterLevel', path: '/data/geojson/water/kecamatan.json' }
     ],
     features: {
       simulation: false,
       uiControls: false,
       clockEvents: false,
       labels: true,
+      floodLogControls: true,
       petaDasarUI: true,
-      layerControls: true
+      layerControls: true,
+      legendControls: true
     },
     logMessage: 'Peta Dasar CesiumJS berhasil diinisialisasi.'
   },
@@ -40,16 +43,18 @@ export const PAGE_CONFIGS = {
   LSTM_PREDICTION: {
     name: 'prediksi-lstm',
     dataLayers: [
-      { type: 'waterLevel', path: '/data/geojson/water/waterLevel.json' }
+      { type: 'waterLevel', path: '/data/geojson/water/kecamatan.json' }
     ],
     features: {
       simulation: false,
       uiControls: false,
-      clockEvents: false,
+      clockEvents: true,
       labels: true,
+      floodLogControls: true,
       lstmPrediction: true,  // 🧠 Fitur prediksi LSTM
       charts: true,          // 📊 Grafik prediksi
-      layerControls: true
+      layerControls: true,
+      legendControls: true
     },
     logMessage: 'Halaman Prediksi LSTM berhasil diinisialisasi.'
   },
