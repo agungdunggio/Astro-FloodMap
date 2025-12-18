@@ -1,11 +1,8 @@
-// src/js/bmkgAggregatedForecast.js
-
-// Struktur data wilayah (GANTI DENGAN DATA SEBENARNYA)
 import { showLoadingToast, successToast, warningToast, errorToast } from '../utils/notify.js';
 
 const KOTA_GORONTALO_STRUCTURE = {
     "Kota Tengah": {
-        namaResmi: "Kecamatan Kota Tengah", // Nama yang akan ditampilkan
+        namaResmi: "Kecamatan Kota Tengah",
         adm4_codes: ["75.71.06.1001", "75.71.06.1002", "75.71.06.1003", "75.71.06.1004", "75.71.06.1005", "75.71.06.1006"]
     },
     "Kota Barat": {
@@ -58,12 +55,11 @@ async function fetchForecastForSingleAdm4(adm4Code) {
         }
         const jsonData = await response.json();
         if (jsonData && jsonData.data && jsonData.data.length > 0 && jsonData.data[0].cuaca) {
-            // Menggabungkan semua array prakiraan menjadi satu array flat
             let flatForecasts = [];
             jsonData.data[0].cuaca.forEach(dailyArray => {
                 flatForecasts = flatForecasts.concat(dailyArray);
             });
-            return flatForecasts.map(item => ({ // Ambil field yang relevan
+            return flatForecasts.map(item => ({ 
                 localDateTime: new Date(item.local_datetime),
                 temperature: parseFloat(item.t),
                 totalPrecipitation: parseFloat(item.tp),
@@ -128,7 +124,7 @@ function aggregateForecastsForKecamatan(allKelurahanForecasts) {
         aggregatedData.push({
             localDateTime: forecastsForThisInterval[0].localDateTime, // Ambil dari yang pertama
             temperature: parseFloat(avgTemp.toFixed(1)),
-            totalPrecipitation: parseFloat(maxPrecipitation.toFixed(1)), // Atau avgPrecipitation
+            totalPrecipitation: parseFloat(maxPrecipitation.toFixed(1)),
             weatherCode: dominantWeatherCode,
             weatherDesc: dominantWeatherDesc,
             iconUrl: dominantIconUrl,
