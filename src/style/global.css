@@ -300,6 +300,11 @@ html, body {
   text-shadow: 0 0 10px rgba(255, 123, 123, 0.5);
 }
 
+.input-hint.loading {
+  color: rgba(255, 255, 255, 0.7);
+  font-style: italic;
+}
+
 /* Auto-filled indicator */
 /* Auto-filled indicator - hanya di input */
 .input-group.auto-filled input[type="number"] {

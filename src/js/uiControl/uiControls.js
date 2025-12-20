@@ -1,19 +1,7 @@
 // src/js/uiControls.js
 import * as Cesium from 'cesium'; // Mungkin tidak perlu Cesium di sini jika tidak ada interaksi langsung
 import { startFloodSimulation, stopFloodSimulation } from '../simulationManager.js';
-import rainfallData from '../../data/rainfallData.json';
-
-/**
- * Get rainfall data by date
- * @param {string} dateString - Date in YYYY-MM-DD format
- * @returns {Object|null} Rainfall data or null if not found
- */
-function getRainfallByDate(dateString) {
-  if (!rainfallData.data || !rainfallData.data[dateString]) {
-    return null;
-  }
-  return rainfallData.data[dateString];
-}
+import { fetchHistoricalRainfall } from '../fetch/lstmPredictionApi.js';
 
 function createModal() {
     if (document.getElementById('simpleModal')) return; 
@@ -137,8 +125,8 @@ export function initializeUIControls(viewer) {
     }
   }
   
-  // Handler untuk perubahan tanggal
-  function handleDateChange() {
+  // Handler untuk perubahan tanggal (async - fetch dari API)
+  async function handleDateChange() {
     const selectedDate = dateSelect?.value;
     
     if (!selectedDate) {
@@ -146,8 +134,8 @@ export function initializeUIControls(viewer) {
       dateSelect?.classList.remove('has-value');
       clearDateBtn?.classList.remove('visible');
       if (dateHint) {
-        dateHint.textContent = 'Pilih tanggal untuk auto-fill curah hujan';
-        dateHint.classList.remove('active', 'error');
+        dateHint.textContent = 'Pilih tanggal untuk auto-fill dari data historis';
+        dateHint.classList.remove('active', 'error', 'loading');
       }
       updateAutoFillIndicator(false);
       return;
@@ -159,8 +147,15 @@ export function initializeUIControls(viewer) {
     // Tampilkan tombol clear
     clearDateBtn?.classList.add('visible');
     
-    // Cari data curah hujan untuk tanggal tersebut
-    const rainfallInfo = getRainfallByDate(selectedDate);
+    // Tampilkan loading state
+    if (dateHint) {
+      dateHint.textContent = '⏳ Mengambil data...';
+      dateHint.classList.add('loading');
+      dateHint.classList.remove('active', 'error');
+    }
+    
+    // Fetch data curah hujan dari API
+    const rainfallInfo = await fetchHistoricalRainfall(selectedDate);
     
     if (rainfallInfo) {
       // Data ditemukan - auto-fill
@@ -168,10 +163,9 @@ export function initializeUIControls(viewer) {
       if (durationInput) durationInput.value = rainfallInfo.duration;
       
       if (dateHint) {
-        const note = rainfallInfo.note ? ` - ${rainfallInfo.note}` : '';
-        dateHint.textContent = `✓ Data ditemukan: ${rainfallInfo.rainfall}mm, ${rainfallInfo.duration}jam${note}`;
+        dateHint.textContent = `✓ Data ditemukan: ${rainfallInfo.rainfall}mm, ${rainfallInfo.duration}jam`;
         dateHint.classList.add('active');
-        dateHint.classList.remove('error');
+        dateHint.classList.remove('error', 'loading');
       }
       
       updateAutoFillIndicator(true);
@@ -180,7 +174,7 @@ export function initializeUIControls(viewer) {
       if (dateHint) {
         dateHint.textContent = '⚠ Data tidak tersedia untuk tanggal ini, silakan input manual';
         dateHint.classList.add('error');
-        dateHint.classList.remove('active');
+        dateHint.classList.remove('active', 'loading');
       }
       updateAutoFillIndicator(false);
     }
@@ -300,10 +294,22 @@ export function initializeUIControls(viewer) {
       // Reset button text
       raiseButton.innerHTML = `<ion-icon name="water-outline"></ion-icon> Simulasi Banjir`;
       
-      displayModalMessage(
-        "Simulasi dimulai",
-        `${rainMm} mm hujan selama ${durationInputHours} jam`
-      );
+      // Cek apakah menggunakan data historis (tanggal dipilih)
+      const selectedDate = dateSelect?.value;
+      let modalDetail = `${rainMm} mm hujan selama ${durationInputHours} jam`;
+      
+      if (selectedDate) {
+        // Format tanggal untuk tampilan (DD/MM/YYYY)
+        const dateObj = new Date(selectedDate);
+        const formattedDate = dateObj.toLocaleDateString('id-ID', {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric'
+        });
+        modalDetail = `Data kejadian: ${formattedDate}\n${rainMm} mm hujan selama ${durationInputHours} jam`;
+      }
+      
+      displayModalMessage("Simulasi dimulai", modalDetail);
     });
   }
 
