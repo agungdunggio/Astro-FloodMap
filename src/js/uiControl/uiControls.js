@@ -1,6 +1,7 @@
 // src/js/uiControls.js
 import * as Cesium from 'cesium'; // Mungkin tidak perlu Cesium di sini jika tidak ada interaksi langsung
 import { startFloodSimulation, stopFloodSimulation } from '../simulationManager.js';
+import { fetchHistoricalRainfall } from '../fetch/lstmPredictionApi.js';
 
 function createModal() {
     if (document.getElementById('simpleModal')) return; 
@@ -66,10 +67,18 @@ export function initializeUIControls(viewer) {
   const rainControls = document.getElementById("rainControls");
   const applyRainButton = document.getElementById("applyRain");
   const cancelRainButton = document.getElementById("cancelRain");
+  
+  // Elemen untuk fitur tanggal
+  const dateSelect = document.getElementById("dateSelect");
+  const clearDateBtn = document.getElementById("clearDate");
+  const dateHint = document.getElementById("dateHint");
+  const rainInput = document.getElementById("rainInput");
+  const durationInput = document.getElementById("rainDuration");
 
   // State untuk tracking panel visibility dan simulasi
   let isPanelOpen = false;
   let isSimulationRunning = false;
+  let isAutoFilled = false; // Track apakah nilai diisi otomatis
   
   // Fungsi untuk update state tombol
   function updateButtonStates() {
@@ -81,6 +90,136 @@ export function initializeUIControls(viewer) {
         cancelRainButton.classList.add('disabled');
       }
     }
+  }
+  
+  // Fungsi untuk update auto-fill indicator
+  function updateAutoFillIndicator(filled) {
+    isAutoFilled = filled;
+    const rainGroup = rainInput?.closest('.input-group');
+    const durationGroup = durationInput?.closest('.input-group');
+    
+    // Hapus badge lama jika ada
+    document.querySelectorAll('.auto-badge').forEach(badge => badge.remove());
+    
+    if (filled) {
+      rainGroup?.classList.add('auto-filled');
+      durationGroup?.classList.add('auto-filled');
+      
+      // Tambah badge di bawah input (append ke input-group)
+      if (rainGroup && !rainGroup.querySelector('.auto-badge')) {
+        const badge = document.createElement('span');
+        badge.className = 'auto-badge';
+        badge.textContent = 'AUTO';
+        rainGroup.appendChild(badge);
+      }
+      
+      if (durationGroup && !durationGroup.querySelector('.auto-badge')) {
+        const badge = document.createElement('span');
+        badge.className = 'auto-badge';
+        badge.textContent = 'AUTO';
+        durationGroup.appendChild(badge);
+      }
+    } else {
+      rainGroup?.classList.remove('auto-filled');
+      durationGroup?.classList.remove('auto-filled');
+    }
+  }
+  
+  // Handler untuk perubahan tanggal (async - fetch dari API)
+  async function handleDateChange() {
+    const selectedDate = dateSelect?.value;
+    
+    if (!selectedDate) {
+      // Tanggal dikosongkan
+      dateSelect?.classList.remove('has-value');
+      clearDateBtn?.classList.remove('visible');
+      if (dateHint) {
+        dateHint.textContent = 'Pilih tanggal untuk auto-fill dari data historis';
+        dateHint.classList.remove('active', 'error', 'loading');
+      }
+      updateAutoFillIndicator(false);
+      return;
+    }
+    
+    // Tanggal dipilih - tambah class has-value untuk styling terang
+    dateSelect?.classList.add('has-value');
+    
+    // Tampilkan tombol clear
+    clearDateBtn?.classList.add('visible');
+    
+    // Tampilkan loading state
+    if (dateHint) {
+      dateHint.textContent = '⏳ Mengambil data...';
+      dateHint.classList.add('loading');
+      dateHint.classList.remove('active', 'error');
+    }
+    
+    // Fetch data curah hujan dari API
+    const rainfallInfo = await fetchHistoricalRainfall(selectedDate);
+    
+    if (rainfallInfo) {
+      // Data ditemukan - auto-fill
+      if (rainInput) rainInput.value = rainfallInfo.rainfall;
+      if (durationInput) durationInput.value = rainfallInfo.duration;
+      
+      if (dateHint) {
+        dateHint.textContent = `✓ Data ditemukan: ${rainfallInfo.rainfall}mm, ${rainfallInfo.duration}jam`;
+        dateHint.classList.add('active');
+        dateHint.classList.remove('error', 'loading');
+      }
+      
+      updateAutoFillIndicator(true);
+    } else {
+      // Data tidak ditemukan
+      if (dateHint) {
+        dateHint.textContent = '⚠ Data tidak tersedia untuk tanggal ini, silakan input manual';
+        dateHint.classList.add('error');
+        dateHint.classList.remove('active', 'loading');
+      }
+      updateAutoFillIndicator(false);
+    }
+  }
+  
+  // Handler untuk clear tanggal
+  function handleClearDate() {
+    if (dateSelect) {
+      dateSelect.value = '';
+      handleDateChange(); // Reset state
+    }
+  }
+  
+  // Setup event listeners untuk date picker
+  if (dateSelect) {
+    dateSelect.addEventListener('change', handleDateChange);
+  }
+  
+  if (clearDateBtn) {
+    clearDateBtn.addEventListener('click', handleClearDate);
+  }
+  
+  // Hapus auto-fill indicator jika user mengubah nilai manual
+  if (rainInput) {
+    rainInput.addEventListener('input', () => {
+      if (isAutoFilled) {
+        updateAutoFillIndicator(false);
+        if (dateHint && dateSelect?.value) {
+          dateHint.textContent = 'Nilai diubah manual';
+          dateHint.classList.remove('active', 'error');
+        }
+      }
+    });
+  }
+  
+  if (durationInput) {
+    durationInput.addEventListener('input', () => {
+      if (isAutoFilled) {
+        updateAutoFillIndicator(false);
+        if (dateHint && dateSelect?.value) {
+          dateHint.textContent = 'Nilai diubah manual';
+          dateHint.classList.remove('active', 'error');
+        }
+      }
+    });
   }
   
   // Set initial state
@@ -155,10 +294,22 @@ export function initializeUIControls(viewer) {
       // Reset button text
       raiseButton.innerHTML = `<ion-icon name="water-outline"></ion-icon> Simulasi Banjir`;
       
-      displayModalMessage(
-        "Simulasi dimulai",
-        `${rainMm} mm hujan selama ${durationInputHours} jam`
-      );
+      // Cek apakah menggunakan data historis (tanggal dipilih)
+      const selectedDate = dateSelect?.value;
+      let modalDetail = `${rainMm} mm hujan selama ${durationInputHours} jam`;
+      
+      if (selectedDate) {
+        // Format tanggal untuk tampilan (DD/MM/YYYY)
+        const dateObj = new Date(selectedDate);
+        const formattedDate = dateObj.toLocaleDateString('id-ID', {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric'
+        });
+        modalDetail = `Data kejadian: ${formattedDate}\n${rainMm} mm hujan selama ${durationInputHours} jam`;
+      }
+      
+      displayModalMessage("Simulasi dimulai", modalDetail);
     });
   }
 
@@ -183,6 +334,9 @@ export function initializeUIControls(viewer) {
       
       // Reset button text
       raiseButton.innerHTML = `<ion-icon name="water-outline"></ion-icon> Simulasi Banjir`;
+      
+      // Reset date picker dan auto-fill state
+      handleClearDate();
       
       displayModalMessage("Simulasi dihentikan dan air direset ke ketinggian awal.");
     });

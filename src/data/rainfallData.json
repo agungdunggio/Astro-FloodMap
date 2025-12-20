@@ -1,0 +1,28 @@
+{
+  "description": "Data curah hujan historis untuk simulasi banjir. Update file ini untuk menambah/mengubah data.",
+  "location": "Makassar",
+  "unit": "mm",
+  "lastUpdated": "2025-12-18",
+  "data": {
+    "2025-12-01": { "rainfall": 45.2},
+    "2025-12-02": { "rainfall": 78.5, "duration": 10 },
+    "2025-12-03": { "rainfall": 120.0, "duration": 10 },
+    "2025-12-04": { "rainfall": 54.4, "duration": 10 },
+    "2025-12-05": { "rainfall": 95.3, "duration": 10 },
+    "2025-12-06": { "rainfall": 25.0, "duration": 10 },
+    "2025-12-07": { "rainfall": 150.8, "duration": 10 },
+    "2025-12-08": { "rainfall": 63.2, "duration": 10 },
+    "2025-12-09": { "rainfall": 88.7, "duration": 10 },
+    "2025-12-10": { "rainfall": 42.1, "duration": 10 },
+    "2025-12-11": { "rainfall": 110.5, "duration": 10 },
+    "2025-12-12": { "rainfall": 35.8, "duration": 10 },
+    "2025-12-13": { "rainfall": 72.4, "duration": 10 },
+    "2025-12-14": { "rainfall": 98.6, "duration": 10 },
+    "2025-12-15": { "rainfall": 130.2, "duration": 10 },
+    "2025-12-16": { "rainfall": 55.9, "duration": 10 },
+    "2025-12-17": { "rainfall": 85.3, "duration": 10 },
+    "2025-12-18": { "rainfall": 67.8, "duration": 10 }
+  },
+  "howToUpdate": "Edit file ini langsung untuk menambah atau mengubah data curah hujan. Format tanggal: YYYY-MM-DD"
+}
+

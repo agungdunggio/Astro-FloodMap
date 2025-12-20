@@ -103,5 +103,41 @@ export function getPredictionSummary(predictions) {
   };
 }
 
+/**
+ * Fetch data historis curah hujan berdasarkan tanggal
+ * @param {string} dateString - Tanggal dalam format YYYY-MM-DD
+ * @returns {Promise<Object|null>} Data historis atau null jika tidak ditemukan
+ */
+export async function fetchHistoricalRainfall(dateString) {
+  try {
+    const response = await fetch(`${LSTM_API_BASE_URL}/historis/${dateString}`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+      }
+    });
 
+    const data = await response.json();
+
+    if (!response.ok || !data.status) {
+      console.warn(`Data historis tidak ditemukan untuk tanggal ${dateString}`);
+      return null;
+    }
+
+    // Extract rainfall data dari response
+    const rainfallData = data.data?.[dateString];
+    
+    if (!rainfallData) {
+      return null;
+    }
+
+    return {
+      rainfall: rainfallData.rainfall,
+      duration: rainfallData.duration || 10 // default 10 jam jika tidak ada
+    };
+  } catch (error) {
+    console.error('Error fetching historical rainfall:', error);
+    return null;
+  }
+}
 
