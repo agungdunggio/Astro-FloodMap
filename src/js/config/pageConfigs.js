@@ -4,6 +4,8 @@
  * Konfigurasi untuk berbagai jenis halaman Cesium
  */
 
+import * as Cesium from 'cesium';
+
 export const PAGE_CONFIGS = {
   SIMULATION: {
     name: 'simulasi-banjir',

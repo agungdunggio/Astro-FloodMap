@@ -15,6 +15,7 @@ import { initializeFloodLogControls } from '../uiControl/floodLogControls.js';
 
 import { PAGE_CONFIGS, LAYER_LOADERS } from '../config/pageConfigs.js';
 
+window.Cesium = Cesium;
 /**
  * Konfigurasi timeline dan animation dengan format WITA
  * @param {Cesium.Viewer} viewer 

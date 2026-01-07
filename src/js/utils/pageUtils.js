@@ -1,5 +1,5 @@
 // src/js/utils/pageUtils.js
-
+import * as Cesium from 'cesium';
 /**
  * Utility functions untuk page initialization
  */
