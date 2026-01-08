@@ -1,8 +1,4 @@
-// src/js/core/cesiumInitializer.js
-import * as Cesium from 'cesium';
-import 'cesium/Build/Cesium/Widgets/widgets.css';
 import { formatJulianDateToWITA, formatJulianTimeToWITA, formatJulianDateToShortWITAForTimeline } from '../Cesium/formatToWita.js';
-
 import { createViewer } from '../viewerSetup.js';
 import { loadWaterLevelGeoJson, loadAdminBoundaryGeoJson, addLabels } from '../dataLoader.js';
 import { initializeSimulationClockEvents } from '../simulationManager.js';
@@ -14,7 +10,6 @@ import { initializeLegendControls } from '../uiControl/legendControls.js';
 import { initializeFloodLogControls } from '../uiControl/floodLogControls.js';
 
 import { PAGE_CONFIGS, LAYER_LOADERS } from '../config/pageConfigs.js';
-
 /**
  * Konfigurasi timeline dan animation dengan format WITA
  * @param {Cesium.Viewer} viewer 

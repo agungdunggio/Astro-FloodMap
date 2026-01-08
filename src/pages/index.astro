@@ -1,7 +1,6 @@
 ---
 import LandingLayout from "../layouts/LandingLayout.astro";
 
-// src/pages/index.astro
 ---
 <LandingLayout title="G-Flood | Simulasi Banjir Interaktif">
     <div id="canvas-container"></div>
@@ -325,6 +324,7 @@ Jelajahi bagaimana air mengalir, menggenangi wilayah, dan mempengaruhi infrastru
         </div>
     </footer>
 
-    {/* Skrip dimuat melalui layout atau secara eksplisit di sini jika perlu */}
-    <script type="module" src="/src/js/landing-script.js"></script>
+    <script>
+        import "../js/landing-script.js";
+    </script>
 </LandingLayout>

@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import '../style/prediksi-lstm.css';
 ---
 
 <BaseLayout title="Prediksi LSTM | Simulasi Banjir">
@@ -53,15 +54,14 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       </div>
     </div>
 
-        <script>
-          import { initializeLSTMPage } from "../js/mainCesium.js";
-          import { initializePage } from '../js/utils/pageUtils.js';
-          
-          // Initialize dengan error handling yang lebih baik
-          // Note: initializeLSTMUIControls sudah dipanggil di dalam initializeLSTMPage
-          initializePage(initializeLSTMPage, 'G_Flood | Prediksi LSTM');
-        </script>
+    <script>
+      import { initializeLSTMPage } from "../js/mainCesium.js";
+      import { initializePage } from '../js/utils/pageUtils.js';
+      
+      // Initialize dengan error handling yang lebih baik
+      // Note: initializeLSTMUIControls sudah dipanggil di dalam initializeLSTMPage
+      initializePage(initializeLSTMPage, 'G_Flood | Prediksi LSTM');
+    </script>
     
-    <link rel="stylesheet" href="/src/style/prediksi-lstm.css">
   </main>
 </BaseLayout>

@@ -1,9 +1,3 @@
-// src/js/utils/pageUtils.js
-
-/**
- * Utility functions untuk page initialization
- */
-
 /**
  * Initialize Cesium page dengan error handling yang comprehensive
  * @param {Function} initializerFunction - Function yang akan menginisialisasi page

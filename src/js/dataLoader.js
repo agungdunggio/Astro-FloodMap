@@ -1,7 +1,10 @@
 // src/js/dataLoader.js
-import * as Cesium from 'cesium';
-import { WATER_COLORS } from './utils/colorUtils.js';
+// Cesium dimuat dari CDN, akses via window.Cesium
+import { getWaterColors } from './utils/colorUtils.js';
 import { KECAMATAN_BASE_HEIGHTS } from '../constants/baseHeightConstants.js';
+
+// Helper untuk mendapatkan Cesium dari window global
+const getCesium = () => window.Cesium;
 
 export let waterLevelEntities = [];
 const DEFAULT_LABEL_ALTITUDE = 200;
@@ -71,6 +74,7 @@ export let currentLabelLayer = null;
 export let currentAdminEntities = []; // Track entities created from polygons
 
 export async function loadWaterLevelGeoJson(viewer, geoJsonUrl) {
+  const Cesium = getCesium();
   try {
     const dataSource = await Cesium.GeoJsonDataSource.load(geoJsonUrl);
     viewer.dataSources.add(dataSource);
@@ -105,7 +109,7 @@ export async function loadWaterLevelGeoJson(viewer, geoJsonUrl) {
         entity.riseRate_mps = riseRate_cmps / 100.0; // cm/s ke m/s
 
         // Optimasi styling polygon untuk performa yang lebih baik
-        entity.polygon.material = WATER_COLORS.c0;
+        entity.polygon.material = getWaterColors(Cesium).c0;
         entity.polygon.outline = false; // Hapus outline// top = -50 m
         entity.polygon.height = baseHeight;
         entity.polygon.extrudedHeight = baseHeight;
@@ -133,6 +137,7 @@ export async function loadWaterLevelGeoJson(viewer, geoJsonUrl) {
 }
 
 export async function loadAdminBoundaryGeoJson(viewer, geoJsonUrl) {
+  const Cesium = getCesium();
   try {
     const dataSource = await Cesium.GeoJsonDataSource.load(geoJsonUrl, { clampToGround: true });
     viewer.dataSources.add(dataSource);
@@ -171,6 +176,7 @@ export async function loadAdminBoundaryGeoJson(viewer, geoJsonUrl) {
  * @param {string} layerType - 'kecamatan' atau 'kelurahan'
  */
 export async function loadAdminLayer(viewer, layerType = 'kecamatan') {
+  const Cesium = getCesium();
   try {
     // Hapus layer admin yang ada sebelumnya
     if (currentAdminLayer) {
@@ -234,6 +240,7 @@ export async function loadAdminLayer(viewer, layerType = 'kecamatan') {
  * @param {string} layerType - 'kecamatan' atau 'kelurahan'
  */
 export async function loadLabelLayer(viewer, layerType = 'kecamatan') {
+  const Cesium = getCesium();
   try {
     // Hapus label layer yang ada sebelumnya
     if (currentLabelLayer) {
@@ -282,6 +289,7 @@ export async function loadLabelLayer(viewer, layerType = 'kecamatan') {
  * @returns {Promise<Array<{ name: string, position: Cesium.Cartesian3 }>>}
  */
 export async function getKecamatanCentroids() {
+  const Cesium = getCesium();
   try {
     const response = await fetch('/data/geojson/administrasi/labelKecamatan.json');
     const labelData = await response.json();
@@ -318,6 +326,7 @@ export async function addLabels(viewer, labelJsonUrl = '/data/geojson/administra
  * Menghapus CallbackProperty dan menggunakan nilai tetap
  */
 export function resetWaterLevelToStatic() {
+  const Cesium = getCesium();
   waterLevelEntities.forEach((entity) => {
     if (!Cesium.defined(entity?.polygon) || !entity.historicalData) return;
 
@@ -332,7 +341,7 @@ export function resetWaterLevelToStatic() {
     entity.polygon.extrudedHeight = baseHeight;
     entity.polygon.height = baseHeight;
 
-    entity.polygon.material = WATER_COLORS.c0;
+    entity.polygon.material = getWaterColors(Cesium).c0;
   });
   console.log('Water level direset ke base height yang sudah ditentukan.');
 }
