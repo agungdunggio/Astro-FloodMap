@@ -1,7 +1,10 @@
 // src/js/forecast/rainForecastScheduler.js
-import * as Cesium from 'cesium';
+// Cesium dimuat dari CDN, akses via window.Cesium
 import { getKecamatanCentroids } from '../dataLoader.js';
 import { addRainEffectForKecamatan, removeRainEffectForKecamatan } from '../rainEffect.js';
+
+// Helper untuk mendapatkan Cesium dari window global
+const getCesium = () => window.Cesium;
 
 let schedulerState = {
   viewer: null,
@@ -17,6 +20,7 @@ function buildActiveSetKey(activeNames) {
 }
 
 export async function initRainForecastScheduler(viewer) {
+  const Cesium = getCesium();
   schedulerState.viewer = viewer;
   // Load centroids once
   const centroids = await getKecamatanCentroids();
@@ -105,6 +109,7 @@ export function disposeRainForecastScheduler() {
  * @returns {Map<string, number>} NamaKecamatan -> mm (0 jika tidak ada hujan)
  */
 export function getCurrentPrecipitationMap(viewer) {
+  const Cesium = getCesium();
   const result = new Map();
   if (!viewer || schedulerState.forecastsByKecamatan.size === 0) return result;
 

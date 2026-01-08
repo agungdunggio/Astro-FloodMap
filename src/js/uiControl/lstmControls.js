@@ -1,6 +1,9 @@
 // src/js/uiControl/lstmControls.js
-import * as Cesium from 'cesium';
+// Cesium dimuat dari CDN, akses via window.Cesium
 import { fetchLSTMPrediction, formatPredictionForChart } from '../fetch/lstmPredictionApi.js';
+
+// Helper untuk mendapatkan Cesium dari window global
+const getCesium = () => window.Cesium;
 import { createPredictionChart, showLoadingState, showErrorState } from '../components/lstmChart.js';
 import { enableScheduledLSTMFlood } from '../simulationManager.js';
 import { successToast, warningToast, errorToast } from '../utils/notify.js';
@@ -55,6 +58,7 @@ export function initializeLSTMUIControls(viewer) {
         // Jadwalkan simulasi LSTM harian 12:00 selama 6 jam
         const predictions = (apiData && apiData.data && apiData.data[0] && apiData.data[0].predictions) || [];
         if (viewer && Array.isArray(predictions) && predictions.length > 0) {
+          const Cesium = getCesium();
           if (typeof disposeLSTMSchedule === 'function') { disposeLSTMSchedule(); disposeLSTMSchedule = null; }
           
           // Atur timeline untuk melihat beberapa hari ke depan (jangan ubah clock range)

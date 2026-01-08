@@ -1,7 +1,15 @@
 // src/js/uiControl/legendControls.js
-import { WATER_COLOR_LEGEND } from '../utils/colorUtils.js';
+import { WATER_COLOR_DEFS } from '../utils/colorUtils.js';
 import { DEFAULT_COLOR } from '../../constants/colorConstants.js';
 import { PANEL_OFFSET } from '../../constants/uiConstants.js';
+
+// Legend data menggunakan hex color langsung (tidak perlu Cesium)
+const WATER_COLOR_LEGEND = [
+  { range: '0 – 40 cm',   hex: WATER_COLOR_DEFS.c0.hex, alpha: WATER_COLOR_DEFS.c0.alpha },
+  { range: '40 – 100 cm', hex: WATER_COLOR_DEFS.c1.hex, alpha: WATER_COLOR_DEFS.c1.alpha },
+  { range: '100 – 180 cm', hex: WATER_COLOR_DEFS.c2.hex, alpha: WATER_COLOR_DEFS.c2.alpha },
+  { range: '> 180 cm',  hex: WATER_COLOR_DEFS.c3.hex, alpha: WATER_COLOR_DEFS.c3.alpha },
+];
 
 let legendPanelVisible = false;
 
@@ -98,7 +106,7 @@ function createLegendPanel() {
     gap: 8px;
   `;
 
-  WATER_COLOR_LEGEND.forEach(({ range, color }) => {
+  WATER_COLOR_LEGEND.forEach(({ range, hex, alpha }) => {
     const row = document.createElement('div');
     row.style.cssText = `
       display: flex;
@@ -113,7 +121,8 @@ function createLegendPanel() {
       border-radius: 3px;
       border: 1px solid #666;
       display: inline-block;
-      background: ${color?.toCssColorString?.() ?? DEFAULT_COLOR};
+      background: ${hex || DEFAULT_COLOR};
+      opacity: ${alpha || 1};
     `;
 
     const label = document.createElement('span');

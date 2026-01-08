@@ -1,5 +1,6 @@
 // src/js/rainEffect.js
-import * as Cesium from 'cesium';
+// Cesium dimuat dari CDN, akses via window.Cesium
+const getCesium = () => window.Cesium;
 
 // State internal modul ini, diekspor agar bisa diakses jika perlu oleh modul lain (misal simulationManager)
 export let currentRainParticleSystem = null;
@@ -8,6 +9,7 @@ let rainParticleSystems = [];
 
 // Fungsi untuk mengupdate posisi emitter hujan (internal)
 function updateRainEmitterPosition(scene) {
+  const Cesium = getCesium();
   if (currentRainParticleSystem && scene && scene.camera) {
     const offset = new Cesium.Cartesian3(0, 0, 2000);
     const newEmitterPosition = Cesium.Cartesian3.add(
@@ -20,6 +22,7 @@ function updateRainEmitterPosition(scene) {
 }
 
 export function addRainEffect(scene) {
+  const Cesium = getCesium();
   if (currentRainParticleSystem) {
     console.log("Efek hujan sudah aktif, tidak membuat ulang.");
     return;
@@ -100,6 +103,7 @@ export function removeRainEffect(scene) {
 }
 
 export function addRainEffectForKecamatan(scene, kecamatanList) {
+  const Cesium = getCesium();
   // Hapus efek hujan lama jika ada
   removeRainEffectForKecamatan(scene);
 

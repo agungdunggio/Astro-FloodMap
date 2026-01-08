@@ -1,9 +1,11 @@
-// src/js/simulationManager.js
-import * as Cesium from 'cesium';
+// Cesium dimuat dari CDN, akses via window.Cesium
 import { waterLevelEntities, resetWaterLevelToStatic, getHistoricalData, getAvailableKecamatan } from './dataLoader.js';
 import { getCurrentPrecipitationMap, getForecastIntervalsMap } from './forecast/rainForecastScheduler.js';
 import { addRainEffect, removeRainEffect, removeRainEffectForKecamatan, currentRainParticleSystem as rainSystemFromEffectModule } from './rainEffect.js';
 import { createDepthColorMaterial } from './utils/colorUtils.js';
+
+// Helper untuk mendapatkan Cesium dari window global
+const getCesium = () => window.Cesium;
 
 export { getAvailableKecamatan };
 
@@ -16,6 +18,7 @@ let isAnimatingWater = false;
 let waterAnimationStartTime = null;
 
 export function initializeSimulationClockEvents(viewer) {
+  const Cesium = getCesium();
   viewer.clock.onTick.addEventListener(function(clock) {
     // Logika untuk efek hujan berdasarkan interval
     if (rainEventStartJulianDate && rainEventEndJulianDate) {
@@ -38,6 +41,7 @@ export function initializeSimulationClockEvents(viewer) {
 }
 
 export function defineRainEvent(viewer, durationHours, customStartTime = null) {
+  const Cesium = getCesium();
   removeRainEffect(viewer.scene); // Bersihkan efek lama dulu
 
   // Gunakan waktu kustom jika disediakan, atau waktu clock saat ini
@@ -258,7 +262,7 @@ export function startFloodSimulation(viewer, rainMm, durationHours, kecamatanNam
         (time) => baseHeight + depthGetter(time), false
       );
     
-      entity.polygon.material = createDepthColorMaterial(depthGetter);
+      entity.polygon.material = createDepthColorMaterial(Cesium, depthGetter);
     });
 
     // Mulai langsung berjalan agar simulasi otomatis berjalan tanpa perlu menekan Play
@@ -338,7 +342,7 @@ export function startFloodSimulationPerKecamatan(viewer, durationHours = 3, opti
         (time) => baseHeight + depthGetter(time), false
       );
 
-      entity.polygon.material = createDepthColorMaterial(depthGetter);
+      entity.polygon.material = createDepthColorMaterial(Cesium, depthGetter);
 
       if (performanceOptions.enableDetailedLogging) {
         console.log(`[SIM-PER-KEC] ${name}: rain=${effectiveRainMm} mm, rate=${riseRateMps.toFixed(4)} m/s, total=${totalRiseM.toFixed(2)} m`);
@@ -432,7 +436,7 @@ export function enableScheduledPerKecamatanFlood(viewer, durationHours = 3) {
           entity.polygon.height = new Cesium.CallbackProperty(
             (time) => baseHeight + depthGetter(time), false
           );
-          entity.polygon.material = createDepthColorMaterial(depthGetter);
+          entity.polygon.material = createDepthColorMaterial(Cesium, depthGetter);
 
           activeByName.set(name, { start, end, baseHeight, riseRateMps, totalRiseM });
 
@@ -573,7 +577,7 @@ export function enableScheduledLSTMFlood(viewer, predictions = [], durationHours
           entity.polygon.height = new Cesium.CallbackProperty(
             (time) => entityBaseHeight + depthGetter(time), false
           );
-          entity.polygon.material = createDepthColorMaterial(depthGetter);
+          entity.polygon.material = createDepthColorMaterial(Cesium, depthGetter);
         });
 
         // Set interval hujan untuk clock events

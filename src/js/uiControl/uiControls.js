@@ -1,5 +1,5 @@
 // src/js/uiControls.js
-import * as Cesium from 'cesium'; // Mungkin tidak perlu Cesium di sini jika tidak ada interaksi langsung
+// Cesium dimuat dari CDN - file ini tidak perlu import Cesium langsung
 import { startFloodSimulation, stopFloodSimulation } from '../simulationManager.js';
 import { fetchHistoricalRainfall } from '../fetch/lstmPredictionApi.js';
 
